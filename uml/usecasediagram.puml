@@ -1,0 +1,29 @@
+@startuml
+left to right direction
+skinparam usecase {
+  BackgroundColor #65A9FF
+  BorderColor #FF69B4
+}
+
+actor "user" as user
+actor "admin" as admin
+
+rectangle "Spaceforces" {
+  usecase "Check space news" as check
+  usecase "Participate in contests" as participate
+  usecase "Create contests" as create
+  usecase "Review and manage contest" as review
+  usecase "Manage users" as manage
+  usecase "authentication" as auth
+}
+
+user --> check
+user --> participate
+user --> create
+admin --> review
+admin --> manage
+
+participate ..> auth : <<include>>
+create ..> auth : <<include>>
+create ..> review : <<include>>
+@enduml
