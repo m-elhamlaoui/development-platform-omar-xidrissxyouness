@@ -1,0 +1,83 @@
+@startuml
+' Entity definitions
+entity "contest_difficulty" {
+  * id : bigint <<PK>>
+  * difficulty_label : varchar
+  abbreviation : varchar
+}
+
+entity "quiz" {
+  * id : bigint <<PK>>
+  * title : varchar
+  created_by_user_id : bigint <<FK>>
+  difficulty_id : bigint <<FK>>
+  topic : varchar
+  description : varchar
+  * start_datetime : timestamp
+  * duration : integer
+  created_at : timestamp
+  is_private : boolean
+}
+
+entity "comment" {
+  id : bigint <<PK>>
+  quiz_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  comment : TEXT
+}
+
+entity "question" {
+  * id : bigint <<PK>>
+  * question_text : varchar
+  points : integer
+  tags : varchar
+  quiz_id : bigint <<FK>>
+}
+
+entity "option" {
+  * id : bigint <<PK>>
+  question_id : bigint <<FK>>
+  * option_text : varchar
+  is_valid : boolean
+}
+
+entity "rank_title" {
+  * id : bigint <<PK>>
+  * title : varchar
+  abbreviation : varchar
+  * min_points : integer
+  * max_points : integer
+}
+
+entity "user_table" {
+  * id : bigint <<PK>>
+  * username : varchar
+  * email : varchar
+  * password_hash : varchar
+  * is_admin : boolean
+  points : integer
+  rank_title_id : bigint <<FK>>
+  is_deleted : boolean
+}
+
+entity "participation" {
+  * user_id : bigint <<FK>>
+  * quiz_id : bigint <<FK>>
+  score : integer
+  completion_time : timestamp
+}
+
+' Relationships
+user_table ||--o{ quiz : creates
+contest_difficulty ||--o{ quiz : categorizes
+quiz ||--o{ comment : has
+user_table ||--o{ comment : writes
+quiz ||--o{ question : contains
+question ||--o{ option : has
+rank_title ||--o{ user_table : ranks
+user_table ||--o{ participation : participates
+quiz ||--o{ participation : includes
+
+' Composite primary key for participation
+participation : (user_id, quiz_id) <<PK>>
+@enduml
