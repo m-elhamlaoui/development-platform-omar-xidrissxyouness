@@ -184,14 +184,6 @@ const leaderboardData = [
 
 export default function SpaceforcesHome() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // In a real app, you would toggle the 'dark' class on the document element
-    document.documentElement.classList.toggle("dark");
-  };
 
   useEffect(() => {
     // Set dark mode by default
@@ -248,14 +240,6 @@ export default function SpaceforcesHome() {
                     className="w-full rounded-lg pl-8 bg-[#4B0082]/30 border-[#9370DB]/30 text-white placeholder:text-white/50"
                   />
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={toggleDarkMode}
-                  className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
-                >
-                  {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </Button>
                 <Button className="hidden md:flex bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]" asChild>
                   <Link href="/create-quiz">
                     <Rocket className="mr-2 h-4 w-4" />
