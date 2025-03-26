@@ -1,6 +1,6 @@
 "use client";
 
-import ParticlesComponent from "@/components/Particles";
+import ParticlesComponent from "@/components/LandingPageParticles";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Rocket } from "lucide-react";
 import Link from "next/link";
