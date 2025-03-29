@@ -4,15 +4,13 @@ import {
   ChevronRight,
   Filter,
   Menu,
-  Moon,
   SpaceIcon as Planet,
   Rocket,
   Satellite,
   Search,
   Sparkles,
-  Sun,
   Trophy,
-  X
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -25,150 +23,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getQuizzes, GetQuizzesResponse } from "@/services/getQuizzes";
 
-// Mock data for quizzes
-const allQuizzes = [
-  {
-    id: "1",
-    title: "Solar System Exploration",
-    description: "Test your knowledge about the planets, moons, and other objects in our solar system.",
-    category: "Astronomy",
-    difficulty: "Intermediate",
-    questions: 15,
-    completions: 1243,
-    author: "Stella Nova",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.8,
-    tags: ["Planets", "Solar System", "Astronomy"],
-    trending: true,
-  },
-  {
-    id: "2",
-    title: "Space Missions Through History",
-    description: "From Sputnik to SpaceX, explore the history of human space exploration.",
-    category: "Space History",
-    difficulty: "Hard",
-    questions: 20,
-    completions: 876,
-    author: "Neil Armstrong",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.6,
-    tags: ["NASA", "Missions", "History"],
-    trending: true,
-  },
-  {
-    id: "3",
-    title: "Cosmic Phenomena",
-    description: "Black holes, supernovas, and other fascinating cosmic events.",
-    category: "Astrophysics",
-    difficulty: "Expert",
-    questions: 12,
-    completions: 532,
-    author: "Dr. Cosmos",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.9,
-    tags: ["Black Holes", "Stars", "Physics"],
-    trending: true,
-  },
-  {
-    id: "4",
-    title: "Constellations and Star Patterns",
-    description: "Identify and learn about the patterns of stars that have guided humanity for millennia.",
-    category: "Astronomy",
-    difficulty: "Easy",
-    questions: 10,
-    completions: 2156,
-    author: "Celeste Skywatcher",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.7,
-    tags: ["Stars", "Navigation", "Mythology"],
-    trending: true,
-  },
-  {
-    id: "5",
-    title: "Rocket Science Basics",
-    description: "It's not rocket science... oh wait, it is! Learn the fundamentals of rocketry.",
-    category: "Engineering",
-    difficulty: "Intermediate",
-    questions: 15,
-    completions: 654,
-    author: "Elon Musketeers",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.5,
-    tags: ["Rockets", "Engineering", "Physics"],
-    trending: true,
-  },
-  {
-    id: "6",
-    title: "Exoplanets and Alien Worlds",
-    description: "Explore planets beyond our solar system and the search for extraterrestrial life.",
-    category: "Astronomy",
-    difficulty: "Intermediate",
-    questions: 18,
-    completions: 789,
-    author: "SETI Searcher",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.4,
-    tags: ["Exoplanets", "Aliens", "Astronomy"],
-  },
-  {
-    id: "7",
-    title: "Space Technology and Gadgets",
-    description: "From space suits to satellites, test your knowledge of space technology.",
-    category: "Technology",
-    difficulty: "Intermediate",
-    questions: 14,
-    completions: 543,
-    author: "Tech Astronaut",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.3,
-    tags: ["Technology", "Gadgets", "Innovation"],
-  },
-  {
-    id: "8",
-    title: "The International Space Station",
-    description: "All about humanity's home in orbit: the ISS.",
-    category: "Space Stations",
-    difficulty: "Easy",
-    questions: 12,
-    completions: 1432,
-    author: "Orbital Observer",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.6,
-    tags: ["ISS", "Astronauts", "Microgravity"],
-  },
-  {
-    id: "9",
-    title: "Mars: The Red Planet",
-    description: "Explore the mysteries and facts about our neighboring planet Mars.",
-    category: "Planetary Science",
-    difficulty: "Intermediate",
-    questions: 16,
-    completions: 876,
-    author: "Martian Explorer",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.7,
-    tags: ["Mars", "Planets", "Exploration"],
-  },
-  {
-    id: "10",
-    title: "Space in Pop Culture",
-    description: "How space has influenced movies, books, and other media throughout history.",
-    category: "Entertainment",
-    difficulty: "Easy",
-    questions: 20,
-    completions: 1987,
-    author: "Sci-Fi Enthusiast",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    rating: 4.2,
-    tags: ["Movies", "Books", "Pop Culture"],
-  },
-];
-
-// Get trending quizzes
-const trendingQuizzes = allQuizzes.filter((quiz) => quiz.trending);
-
-// Mock data for leaderboard
 const leaderboardData = [
   { rank: 1, username: "CosmicConqueror", points: 12450, avatar: "/placeholder.svg?height=40&width=40" },
   { rank: 2, username: "StarGazer42", points: 11280, avatar: "/placeholder.svg?height=40&width=40" },
@@ -184,12 +40,28 @@ const leaderboardData = [
 
 export default function SpaceforcesHome() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [allQuizzes, setAllQuizzes] = useState<GetQuizzesResponse[]>([]);
+  const [liveQuizzes, setLiveQuizzes] = useState<GetQuizzesResponse[]>([]);
+  const [leaderboard, setLeaderboard] = useState(leaderboardData);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set dark mode by default
     if (!document.documentElement.classList.contains("dark")) {
       document.documentElement.classList.add("dark");
     }
+
+    const fetchQuizzes = async () => {
+      setLoading(true);
+      const quizzes = await getQuizzes();
+      const liveQuizzes = quizzes.filter((quiz) => quiz.status === "LIVE").slice(0, 5);
+      const allQuizzes = quizzes.filter((quiz) => quiz.status !== "LIVE");
+      setAllQuizzes(allQuizzes);
+      setLiveQuizzes(liveQuizzes);
+      setLoading(false);
+    };
+
+    fetchQuizzes();
   }, []);
 
   return (
@@ -197,10 +69,7 @@ export default function SpaceforcesHome() {
       <div className="fixed inset-0 z-0">
         <HomePageParticles id="tsparticles" />
       </div>
-
-      {/* Content Container */}
       <div className="relative z-10">
-        {/* Header */}
         <header className="sticky top-0 z-20 backdrop-blur-md bg-black/40 border-b border-[#9370DB]/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between py-4">
@@ -241,7 +110,7 @@ export default function SpaceforcesHome() {
                   />
                 </div>
                 <Button className="hidden md:flex bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]" asChild>
-                  <Link href="/create-quiz">
+                  <Link href="/home/create-quiz">
                     <Rocket className="mr-2 h-4 w-4" />
                     Create Quiz
                   </Link>
@@ -339,7 +208,6 @@ export default function SpaceforcesHome() {
                 </div>
               </div>
 
-              {/* Quiz Categories */}
               <Tabs defaultValue="all" className="mb-8">
                 <TabsList className="bg-[#4B0082]/30 border border-[#9370DB]/30">
                   <TabsTrigger
@@ -374,55 +242,78 @@ export default function SpaceforcesHome() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="all" className="mt-6">
-                  <div className="grid grid-cols-1 gap-4">
-                    {allQuizzes.map((quiz) => (
-                      <QuizCard key={quiz.id} quiz={quiz} />
-                    ))}
-                  </div>
-                  <div className="mt-8 flex justify-center">
-                    <Button
-                      variant="outline"
-                      className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
-                    >
-                      Load More
-                    </Button>
-                  </div>
+                  {allQuizzes?.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {allQuizzes.map((quiz) => (
+                        <QuizCard key={quiz.id} quiz={quiz} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-64">
+                      <p className="text-white/70">No quizzes available at the moment.</p>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="astronomy" className="mt-6">
-                  <div className="grid grid-cols-1 gap-4">
-                    {allQuizzes
-                      .filter((quiz) => quiz.category === "Astronomy")
-                      .map((quiz) => (
-                        <QuizCard key={quiz.id} quiz={quiz} />
-                      ))}
-                  </div>
+                  {allQuizzes?.filter((quiz) => quiz.topic.includes("Astronomy"))?.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {allQuizzes
+                        .filter((quiz) => quiz.topic.includes("Astronomy"))
+                        .map((quiz) => (
+                          <QuizCard key={quiz.id} quiz={quiz} />
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-64">
+                      <p className="text-white/70">No quizzes available at the moment.</p>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="physics" className="mt-6">
-                  <div className="grid grid-cols-1 gap-4">
-                    {allQuizzes
-                      .filter((quiz) => quiz.category === "Astrophysics")
-                      .map((quiz) => (
-                        <QuizCard key={quiz.id} quiz={quiz} />
-                      ))}
-                  </div>
+                  {allQuizzes?.filter((quiz) => quiz.topic.includes("Astrophysics"))?.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {allQuizzes
+                        .filter((quiz) => quiz.topic.includes("Astrophysics"))
+                        .map((quiz) => (
+                          <QuizCard key={quiz.id} quiz={quiz} />
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-64">
+                      <p className="text-white/70">No quizzes available at the moment.</p>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="history" className="mt-6">
-                  <div className="grid grid-cols-1 gap-4">
-                    {allQuizzes
-                      .filter((quiz) => quiz.category === "Space History")
-                      .map((quiz) => (
-                        <QuizCard key={quiz.id} quiz={quiz} />
-                      ))}
-                  </div>
+                  {allQuizzes?.filter((quiz) => quiz.topic.includes("Space History"))?.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {allQuizzes
+                        .filter((quiz) => quiz.topic.includes("Space History"))
+                        .map((quiz) => (
+                          <QuizCard key={quiz.id} quiz={quiz} />
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-64">
+                      <p className="text-white/70">No quizzes available at the moment.</p>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="technology" className="mt-6">
-                  <div className="grid grid-cols-1 gap-4">
-                    {allQuizzes
-                      .filter((quiz) => quiz.category === "Technology" || quiz.category === "Engineering")
-                      .map((quiz) => (
-                        <QuizCard key={quiz.id} quiz={quiz} />
-                      ))}
-                  </div>
+                  {allQuizzes?.filter((quiz) => quiz.topic.includes("Technology") || quiz.topic.includes("Engineering"))
+                    ?.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {allQuizzes
+                        .filter((quiz) => quiz.topic.includes("Technology") || quiz.topic.includes("Engineering"))
+                        .map((quiz) => (
+                          <QuizCard key={quiz.id} quiz={quiz} />
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-64">
+                      <p className="text-white/70">No quizzes available at the moment.</p>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
@@ -434,12 +325,12 @@ export default function SpaceforcesHome() {
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center text-xl text-white">
                     <Satellite className="mr-2 h-5 w-5 text-[#E6E6FA]" />
-                    Trending This Week
+                    Live Quizzes
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    {trendingQuizzes.map((quiz) => (
+                    {liveQuizzes.map((quiz) => (
                       <QuizCard key={quiz.id} quiz={quiz} compact />
                     ))}
                   </div>
@@ -452,7 +343,7 @@ export default function SpaceforcesHome() {
                     asChild
                   >
                     <Link href="/trending">
-                      View All Trending
+                      View All Live
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Link>
                   </Button>
@@ -470,7 +361,7 @@ export default function SpaceforcesHome() {
                 <CardContent className="p-4">
                   <ScrollArea className="h-[400px] pr-4 -mr-4">
                     <div className="space-y-3">
-                      {leaderboardData.map((player) => (
+                      {leaderboard.map((player) => (
                         <div
                           key={player.rank}
                           className="flex items-center justify-between p-2 rounded-md bg-[#6A0DAD]/20 hover:bg-[#6A0DAD]/30 transition-colors"
@@ -554,19 +445,8 @@ export default function SpaceforcesHome() {
         <footer className="border-t border-[#9370DB]/30 py-6 md:py-0 bg-black/40 backdrop-blur-md mt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
             <p className="text-center text-sm leading-loose text-white/70 md:text-left">
-              © 2024 Spaceforces. Exploring the cosmos, one quiz at a time.
+              © 2025 Spaceforces. Exploring the cosmos, one quiz at a time.
             </p>
-            <div className="flex items-center gap-4 text-sm text-white/70">
-              <Link href="/terms" className="hover:text-white hover:underline">
-                Terms
-              </Link>
-              <Link href="/privacy" className="hover:text-white hover:underline">
-                Privacy
-              </Link>
-              <Link href="/contact" className="hover:text-white hover:underline">
-                Contact
-              </Link>
-            </div>
           </div>
         </footer>
       </div>

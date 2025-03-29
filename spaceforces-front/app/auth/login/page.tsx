@@ -1,6 +1,7 @@
 "use client";
 
 import ParticlesComponent from "@/components/LandingPageParticles";
+import toast from "react-hot-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Rocket } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +13,8 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { login } from "@/services/login";
+import { useAuthStore } from "@/lib/store";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -24,8 +26,8 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useAuthStore();
   const router = useRouter();
-  const { toast } = useToast();
 
   const {
     register,
@@ -36,20 +38,23 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    try {
-      setIsLoading(true);
-      // TODO: Implement actual login logic here
-      throw new Error("Not implemented");
-      router.push("/dashboard");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Invalid credentials. Please try again.",
-        variant: "destructive",
+    setIsLoading(true);
+    login(data)
+      .then((response) => {
+        toast.success("Login successful! Redirecting to home page...");
+        router.push("/home");
+        setUser({
+          id: response,
+        });
+
+        // const { token } = response;
+        // localStorage.setItem("token", token);
+
+      })
+      .catch(() => {
+        toast.error("Invalid credentials. Please try again.");
       });
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   };
 
   return (
@@ -99,12 +104,6 @@ export default function LoginPage() {
                 </div>
                 {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>}
               </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Link href="/auth/forgot-password" className="text-sm text-purple-400 hover:text-purple-300">
-                Forgot your password?
-              </Link>
             </div>
 
             <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>

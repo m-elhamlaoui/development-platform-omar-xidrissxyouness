@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import Particles, { initParticlesEngine, IParticlesProps } from "@tsparticles/react";
 import { loadFull } from "tsparticles";
 import { ISourceOptions } from "@tsparticles/engine";
@@ -9,11 +9,7 @@ const options: ISourceOptions = {
     color: {
       value: "#000000",
     },
-    image: "",
-    position: "",
-    repeat: "",
-    size: "",
-    opacity: 1,
+    image: "radial-gradient(circle at bottom center, #6A0DAD 0%, #4B0082 20%, #2E0854 40%, #1A0033 60%, #000000 100%)",
   },
   backgroundMask: {
     composite: "destination-out",
@@ -559,7 +555,7 @@ const options: ISourceOptions = {
   },
 };
 
-export default function ParticlesComponent(props: IParticlesProps) {
+function ParticlesComponent(props: IParticlesProps) {
   const [init, setInit] = useState(false);
 
   // this should be run only once per application lifetime
@@ -585,3 +581,5 @@ export default function ParticlesComponent(props: IParticlesProps) {
     return <Particles id="tsparticles" options={options} {...props} />;
   }
 }
+
+export default memo(ParticlesComponent);

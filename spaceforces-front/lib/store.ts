@@ -1,11 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-interface User {
-  id: string;
-  email: string;
-  username: string;
-}
+import { User } from '@/types';
 
 interface AuthState {
   user: User | null;
@@ -16,7 +11,7 @@ interface AuthState {
 
 interface QuizCreationState {
   title: string;
-  category: string;
+  topic: string;
   difficulty: 'easy' | 'medium' | 'hard';
   questions: Array<{
     question: string;
@@ -24,7 +19,7 @@ interface QuizCreationState {
     correctAnswer: number;
   }>;
   setTitle: (title: string) => void;
-  setCategory: (category: string) => void;
+  settopic: (topic: string) => void;
   setDifficulty: (difficulty: 'easy' | 'medium' | 'hard') => void;
   addQuestion: (question: string, answers: string[], correctAnswer: number) => void;
   removeQuestion: (index: number) => void;
@@ -47,11 +42,11 @@ export const useAuthStore = create<AuthState>()(
 
 export const useQuizCreationStore = create<QuizCreationState>((set) => ({
   title: '',
-  category: '',
+  topic: '',
   difficulty: 'medium',
   questions: [],
   setTitle: (title) => set({ title }),
-  setCategory: (category) => set({ category }),
+  settopic: (topic) => set({ topic }),
   setDifficulty: (difficulty) => set({ difficulty }),
   addQuestion: (question, answers, correctAnswer) =>
     set((state) => ({
@@ -64,7 +59,7 @@ export const useQuizCreationStore = create<QuizCreationState>((set) => ({
   resetQuiz: () =>
     set({
       title: '',
-      category: '',
+      topic: '',
       difficulty: 'medium',
       questions: [],
     }),
