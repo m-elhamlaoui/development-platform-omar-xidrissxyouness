@@ -1,6 +1,6 @@
 package com.ensias.spaceforces.question;
 
-import com.ensias.spaceforces.option.dto.OptionDTO;
+import com.ensias.spaceforces.option.dto.OptionInfosDTO;
 import com.ensias.spaceforces.question.dto.QuestionDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,7 +25,7 @@ public class QuestionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<QuestionDTO>> getAllQuestions() {
+    public ResponseEntity<List<Question>> getAllQuestions() {
         return new ResponseEntity<>(
                 questionService.getAllQuestions(),
                 HttpStatus.OK
@@ -33,11 +33,11 @@ public class QuestionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<QuestionDTO> getQuestionById(@PathVariable Long id) {
+    public ResponseEntity<Question> getQuestionById(@PathVariable Long id) {
         return ResponseEntity.ok(questionService.getQuestionById(id));
     }
     @GetMapping("/{questionId}/options")
-    public ResponseEntity<List<OptionDTO>> getQuestionOptions(
+    public ResponseEntity<List<OptionInfosDTO>> getQuestionOptions(
             @PathVariable Long questionId) {
         return ResponseEntity.ok(questionService.getQuestionOptions(questionId));
     }
