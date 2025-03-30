@@ -110,7 +110,7 @@ export default function SpaceforcesHome() {
                   />
                 </div>
                 <Button className="hidden md:flex bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]" asChild>
-                  <Link href="/home/create-quiz">
+                  <Link href="/create-quiz">
                     <Rocket className="mr-2 h-4 w-4" />
                     Create Quiz
                   </Link>
