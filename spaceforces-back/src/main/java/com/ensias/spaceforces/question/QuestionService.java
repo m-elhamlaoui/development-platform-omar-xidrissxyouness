@@ -1,5 +1,6 @@
 package com.ensias.spaceforces.question;
 
+import com.ensias.spaceforces.option.dto.OptionInfosDTO;
 import com.ensias.spaceforces.question.dto.QuestionDTO;
 import com.ensias.spaceforces.quiz.Quiz;
 import com.ensias.spaceforces.quiz.QuizRepository;
@@ -7,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.ensias.spaceforces.option.*;
-import com.ensias.spaceforces.option.dto.OptionDTO;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +19,7 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final QuizRepository quizRepository;
     private final OptionRepository optionRepository;
+
 
 
     public QuestionDTO createQuestion(QuestionDTO questionDTO) {
@@ -36,15 +37,12 @@ public class QuestionService {
         return convertToDTO(savedQuestion);
     }
 
-    public List<QuestionDTO> getAllQuestions() {
-        return questionRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public List<Question> getAllQuestions() {
+        return new ArrayList<>(questionRepository.findAll());
     }
-    public QuestionDTO getQuestionById(Long id) {
-        Question question = questionRepository.findById(id)
+    public Question getQuestionById(Long id) {
+        return questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
-        return convertToDTO(question);
     }
 
     private QuestionDTO convertToDTO(Question question) {
@@ -55,21 +53,21 @@ public class QuestionService {
         dto.setTags(question.getTags());
         dto.setQuestionText(question.getQuestionText());
         dto.setCorrectOption(question.getCorrectOption());
+
         return dto;
     }
 
     @Transactional(readOnly = true)
-    public List<OptionDTO> getQuestionOptions(Long questionId) {
+    public List<OptionInfosDTO> getQuestionOptions(Long questionId) {
         return optionRepository.findByQuestionId(questionId).stream()
                 .map(this::convertToOptionDTO)
                 .toList();
     }
 
 
-    private OptionDTO convertToOptionDTO(Option option) {
-        OptionDTO dto = new OptionDTO();
+    private OptionInfosDTO convertToOptionDTO(Option option) {
+        OptionInfosDTO dto = new OptionInfosDTO();
         dto.setId(option.getId());
-        dto.setQuestionId(option.getQuestion().getId());
         dto.setOptionText(option.getOptionText());
         dto.setValid(option.isValid());
         return dto;
