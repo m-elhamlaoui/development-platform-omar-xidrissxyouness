@@ -48,9 +48,10 @@ public class Quiz {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "statut_quiz", nullable = false)
-    private QuizStatus status;
+    private QuizStatus status=QuizStatus.CREATED;
 
-    @Column(nullable = false)
-    private QuizMode mode_quiz;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mode_quiz", nullable = false)
+    private QuizMode mode;
 
 }
