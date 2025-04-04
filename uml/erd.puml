@@ -1,83 +1,73 @@
 @startuml
-' Entity definitions
-entity "contest_difficulty" {
-  * id : bigint <<PK>>
-  * difficulty_label : varchar
-  abbreviation : varchar
-}
 
-entity "quiz" {
-  * id : bigint <<PK>>
-  * title : varchar
-  created_by_user_id : bigint <<FK>>
-  difficulty_id : bigint <<FK>>
+
+entity quiz {
+  *id : bigint <<PK>>
+  title : varchar <<not null>>
+  created_by_user_id : bigint
+  difficulty_id : bigint
   topic : varchar
   description : varchar
-  * start_datetime : timestamp
-  * duration : integer
+  start_datetime : timestamp <<not null>>
+  duration : integer <<not null>>
   created_at : timestamp
-  is_private : boolean
+  status : varchar
+  mode : varchar
 }
 
-entity "comment" {
-  id : bigint <<PK>>
-  quiz_id : bigint <<FK>>
-  user_id : bigint <<FK>>
-  comment : TEXT
-}
-
-entity "question" {
-  * id : bigint <<PK>>
-  * question_text : varchar
-  points : integer
-  tags : varchar
-  quiz_id : bigint <<FK>>
-}
-
-entity "option" {
-  * id : bigint <<PK>>
-  question_id : bigint <<FK>>
-  * option_text : varchar
-  is_valid : boolean
-}
-
-entity "rank_title" {
-  * id : bigint <<PK>>
-  * title : varchar
+entity contest_difficulty {
+  *id : bigint <<PK>>
+  difficulty_label : varchar <<not null>>
   abbreviation : varchar
-  * min_points : integer
-  * max_points : integer
 }
 
-entity "user_table" {
-  * id : bigint <<PK>>
-  * username : varchar
-  * email : varchar
-  * password_hash : varchar
-  * is_admin : boolean
+entity question {
+  *id : bigint <<PK>>
+  question_text : varchar <<not null>>
   points : integer
-  rank_title_id : bigint <<FK>>
+  quiz_id : bigint
+}
+
+entity option {
+  *id : bigint <<PK>>
+  question_id : bigint
+  option_text : varchar <<not null>>
+  is_correct : bool
+}
+
+entity rank_title {
+  *id : bigint <<PK>>
+  title : varchar <<not null>>
+  abbreviation : varchar
+  min_points : integer <<not null>>
+  max_points : integer <<not null>>
+}
+
+entity user_table {
+  *id : bigint <<PK>>
+  username : varchar <<not null>>
+  email : varchar <<not null>>
+  password_hash : varchar <<not null>>
+  is_admin : boolean <<not null>>
+  points : integer
+  rank_title_id : bigint
   is_deleted : boolean
 }
 
-entity "participation" {
-  * user_id : bigint <<FK>>
-  * quiz_id : bigint <<FK>>
+entity participation {
+  *user_id : bigint <<PK>>
+  *quiz_id : bigint <<PK>>
   score : integer
   completion_time : timestamp
 }
 
 ' Relationships
-user_table ||--o{ quiz : creates
-contest_difficulty ||--o{ quiz : categorizes
-quiz ||--o{ comment : has
-user_table ||--o{ comment : writes
-quiz ||--o{ question : contains
-question ||--o{ option : has
-rank_title ||--o{ user_table : ranks
-user_table ||--o{ participation : participates
-quiz ||--o{ participation : includes
+quiz::created_by_user_id --> user_table::id
+quiz::difficulty_id --> contest_difficulty::id
+question::quiz_id --> quiz::id
+option::question_id --> question::id
+user_table::rank_title_id --> rank_title::id
+participation::user_id --> user_table::id
+participation::quiz_id --> quiz::id
 
-' Composite primary key for participation
-participation : (user_id, quiz_id) <<PK>>
 @enduml
