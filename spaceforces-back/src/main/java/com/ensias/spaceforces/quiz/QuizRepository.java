@@ -7,4 +7,6 @@ import java.util.List;
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findByStatus(QuizStatus status);
     List<Quiz> findByCreatedById(Long userId);
+    List<Quiz> findByMode(QuizMode mode);
+    List<Quiz> findByModeAndStatus(QuizMode mode, QuizStatus status);
 }
