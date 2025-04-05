@@ -1,7 +1,11 @@
 package com.ensias.spaceforces.quiz;
 
-import com.ensias.spaceforces.question.dto.QuestionDTO;
-import com.ensias.spaceforces.quiz.dto.QuizDTO;
+import com.ensias.spaceforces.question.Question;
+import com.ensias.spaceforces.quiz.dto.QuizCreateDTO;
+import com.ensias.spaceforces.quiz.dto.QuizWithQuestionsDTO;
+import com.ensias.spaceforces.quiz.dto.QuizDetailsDTO;
+import com.ensias.spaceforces.user.UserService;
+import com.ensias.spaceforces.user.config.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,48 +19,87 @@ import java.util.List;
 public class QuizController {
 
     private final QuizService quizService;
+    private final UserService userService; // Add this
+
 
     @PostMapping
-    public ResponseEntity<QuizDTO> createQuiz(@RequestBody QuizDTO quizDTO) {
+    public ResponseEntity<Quiz> createQuiz(@RequestBody QuizCreateDTO quizDTO) {
+        // Get current user from security context
+        CustomUserDetails userDetails = userService.auth();
         return new ResponseEntity<>(
-                quizService.createQuiz(quizDTO),
+                quizService.createQuiz(quizDTO, userDetails.getId()),
                 HttpStatus.CREATED
         );
     }
 
+
+        @PostMapping("/with-questions")
+        public ResponseEntity<Quiz> createQuizWithQuestions(
+                @RequestBody QuizWithQuestionsDTO quizDTO) {
+            CustomUserDetails userDetails = userService.auth();
+            return new ResponseEntity<>(
+                    quizService.createQuizWithQuestions(quizDTO,  userDetails.getId()),
+                    HttpStatus.CREATED
+            );
+        }
+
+
+
     @GetMapping
-    public ResponseEntity<List<QuizDTO>> getAllQuizzes() {
+    public ResponseEntity<?> getQuizzes(
+            @RequestParam(required = false) QuizMode mode,
+            @RequestParam(required = false) QuizStatus status) {
+
+        if (mode != null && status != null) {
+            return ResponseEntity.ok(quizService.getQuizzesByModeAndStatus(mode, status));
+        } else if (mode != null) {
+            return ResponseEntity.ok(quizService.getQuizzesByMode(mode));
+        } else if (status != null) {
+            return ResponseEntity.ok(quizService.getQuizzesByStatus(status));
+        }
         return ResponseEntity.ok(quizService.getAllQuizzes());
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<QuizDTO> getQuizById(@PathVariable Long id) {
+    public ResponseEntity<Quiz> getQuizById(@PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuizById(id));
     }
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<QuizDTO>> getQuizzesByStatus(
-            @PathVariable QuizStatus status) {
-        return ResponseEntity.ok(quizService.getQuizzesByStatus(status));
-    }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<QuizDTO> updateQuizStatus(
+    public ResponseEntity<Quiz> updateQuizStatus(
             @PathVariable Long id,
             @RequestParam QuizStatus newStatus) {
         return ResponseEntity.ok(quizService.updateQuizStatus(id, newStatus));
     }
 
     @GetMapping("/{quizId}/questions")
-    public ResponseEntity<List<QuestionDTO>> getQuizQuestions(
+    public ResponseEntity<List<Question>> getQuizQuestions(
             @PathVariable Long quizId) {
         return ResponseEntity.ok(quizService.getQuizQuestions(quizId));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<QuizDTO>> getQuizzesByUser(
+    public ResponseEntity<List<Quiz>> getQuizzesByUser(
             @PathVariable Long userId) {
         return ResponseEntity.ok(quizService.getQuizzesByUserId(userId));
     }
+
+    @GetMapping("/my-quizzes")
+    public ResponseEntity<List<Quiz>> getQuizzesByUser() {
+        CustomUserDetails userDetails = userService.auth();
+        return ResponseEntity.ok(quizService.getQuizzesByUserId(userDetails.getId()));
+    }
+
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<QuizDetailsDTO> getQuizDetails(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(quizService.getQuizDetailsById(id));
+    }
+
+
+
 
 }
