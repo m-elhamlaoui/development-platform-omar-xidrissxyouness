@@ -1,12 +1,25 @@
 package com.ensias.spaceforces.user;
-
 import com.ensias.spaceforces.rank.Rank;
+import com.ensias.spaceforces.rank.dto.RankDTO;
+import com.ensias.spaceforces.exception.UserNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.ensias.spaceforces.rank.RankRepository;
+import com.ensias.spaceforces.user.config.CustomUserDetails;
+import com.ensias.spaceforces.user.dto.LoginDTO;
+import com.ensias.spaceforces.user.dto.RegistrationDTO;
 import com.ensias.spaceforces.user.dto.UserDTO;
+import com.ensias.spaceforces.exception.EmailTakenException;
+import com.ensias.spaceforces.utils.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,84 +28,57 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    protected final JwtTokenProvider jwtTokenProvider;
     private final RankRepository rankRepository;
 
-    public UserDTO createUser(UserDTO userDTO) {
-        if (userRepository.existsByUsername(userDTO.getUsername())) {
-            throw new RuntimeException("Username already exists");
-        }
-
-        if (userRepository.existsByEmail(userDTO.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-
-        User user = new User();
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(userDTO.getPassword());
-        user.setAdmin(userDTO.isAdmin());
-        user.setPoints(userDTO.getPoints());
-        user.setDescription(userDTO.getDescription());
-
-        if (userDTO.getRankId() != null) {
-            Rank rank = rankRepository.findById(userDTO.getRankId())
-                    .orElseThrow(() -> new RuntimeException("Rank not found"));
-            user.setRank(rank);
-        }
-
-        User savedUser = userRepository.save(user);
-        return convertToDTO(savedUser);
+    public CustomUserDetails auth() {
+        return (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-@Transactional(readOnly = true)
-public List<UserDTO> getAllUsers() {
-    return userRepository.findAll().stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
-}
-    public UserDTO getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return convertToDTO(user);
+    @Transactional
+    public void registerUser(RegistrationDTO registrationDTO) throws EmailTakenException, IllegalStateException {
+
+        if (userRepository.existsByEmail(registrationDTO.getEmail())) {
+            throw new EmailTakenException();
+        }
+
+        User newUser = new User();
+        newUser.setUsername(registrationDTO.getUsername());
+        newUser.setEmail(registrationDTO.getEmail());
+        newUser.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
+        newUser.setAdmin(false);
+        newUser.setRank(rankRepository.getReferenceById(1L));
+        newUser.setDescription(registrationDTO.getDescription());
+        newUser.setPoints(0);
+        userRepository.save(newUser);
     }
 
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (userDTO.getUsername() != null && !userDTO.getUsername().equals(user.getUsername())) {
-            if (userRepository.existsByUsername(userDTO.getUsername())) {
-                throw new RuntimeException("Username already exists");
-            }
-            user.setUsername(userDTO.getUsername());
-        }
-
-        if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(userDTO.getEmail())) {
-                throw new RuntimeException("Email already exists");
-            }
-            user.setEmail(userDTO.getEmail());
-        }
-
-        if (userDTO.getPassword() != null) {
-            user.setPassword(userDTO.getPassword());
-        }
-
-        if (userDTO.getRankId() != null) {
-            Rank rank = rankRepository.findById(userDTO.getRankId())
-                    .orElseThrow(() -> new RuntimeException("Rank not found"));
-            user.setRank(rank);
-        }
-
-        user.setAdmin(userDTO.isAdmin());
-        user.setPoints(userDTO.getPoints());
-        user.setDescription(userDTO.getDescription());
-
-        User updatedUser = userRepository.save(user);
-        return convertToDTO(updatedUser);
+    public String login(LoginDTO loginDTO) {
+        // Authenticate the user
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Load user details
+        return jwtTokenProvider.generateToken(authentication);
     }
 
-    private UserDTO convertToDTO(User user) {
+
+    private boolean isTokenExpired(Timestamp tokenExpiry) {
+        return tokenExpiry.before(new Timestamp(System.currentTimeMillis()));
+    }
+
+    public User findUser(long id) {
+        return userRepository.getReferenceById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public UserDTO getAllUserInfo(User user) {
+        return mapToDto(user);
+    }
+
+
+    public UserDTO mapToDto(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
@@ -101,8 +87,43 @@ public List<UserDTO> getAllUsers() {
         dto.setPoints(user.getPoints());
         dto.setDescription(user.getDescription());
 
-        dto.setRankId(user.getRank() != null ? user.getRank().getId() : null);
+        if(user.getRank() != null) {
+            dto.setRank(mapRankToDto(user.getRank()));
+        }
+
 
         return dto;
     }
+
+    private RankDTO mapRankToDto(Rank rank) {
+        RankDTO rankDto = new RankDTO();
+        rankDto.setId(rank.getId());
+        rankDto.setTitle(rank.getTitle());
+        rankDto.setAbbreviation(rank.getAbbreviation());
+        rankDto.setMinPoints(rank.getMinPoints());
+        rankDto.setMaxPoints(rank.getMaxPoints());
+        return rankDto;
+    }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToDto)
+                .sorted(Comparator.comparingInt(UserDTO::getPoints).reversed())
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional
+    public void makeUserAdmin(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        if(user.isAdmin()) {
+            throw new IllegalStateException("User is already an admin");
+        }
+
+        user.setAdmin(true);
+        userRepository.save(user);
+    }
+
 }

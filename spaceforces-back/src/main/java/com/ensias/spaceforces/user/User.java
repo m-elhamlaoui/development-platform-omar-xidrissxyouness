@@ -1,10 +1,17 @@
 package com.ensias.spaceforces.user;
 
 import com.ensias.spaceforces.rank.Rank;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "app_users")
 @Data
 public class User {
@@ -19,6 +26,7 @@ public class User {
     private String email;
 
     @Column(name = "password_hash", nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(name = "is_admin", nullable = false)

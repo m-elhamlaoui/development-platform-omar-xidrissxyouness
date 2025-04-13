@@ -1,5 +1,6 @@
 package com.ensias.spaceforces.user.dto;
 
+import com.ensias.spaceforces.rank.dto.RankDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import jakarta.validation.constraints.*;
@@ -15,13 +16,10 @@ public class UserDTO {
     @NotBlank(message = "Email is required")
     private String email;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Size(min = 6, message = "Password must be at least 6 characters")
-    private String password;
     @JsonProperty("isAdmin")
     private boolean isAdmin;
     @JsonProperty("rank")
-    private Long rankId;
+    private RankDTO rank;
     private int points;
     private String description;
 }
