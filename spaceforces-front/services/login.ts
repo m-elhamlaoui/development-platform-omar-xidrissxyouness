@@ -1,6 +1,5 @@
 import axiosInstance from "./axiosInstance";
 
-
 type LoginRequest = {
   email: string;
   password: string;
@@ -8,6 +7,7 @@ type LoginRequest = {
 
 type LoginResponse = {
   token: string;
+  message: string;
 };
 
 export const login = async ({ email, password }: LoginRequest): Promise<LoginResponse> => {
@@ -24,6 +24,7 @@ export const login = async ({ email, password }: LoginRequest): Promise<LoginRes
         },
       }
     );
+    localStorage.setItem("token", response.data.token);
     return response.data;
   } catch (error) {
     throw error;
