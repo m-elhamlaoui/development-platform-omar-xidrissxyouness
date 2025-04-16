@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import jwt from "jsonwebtoken";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,14 +42,15 @@ export default function LoginPage() {
     login(data)
       .then((response) => {
         toast.success("Login successful! Redirecting to home page...");
-        router.push("/home");
+        const decodedToken = jwt.decode(response.token);
+        document.cookie = `token=${response}; path=/; max-age=3600;`;
         setUser({
-          id: response,
+          // @ts-ignore
+          id: decodedToken?.userId,
+          // @ts-ignore
+          email: decodedToken?.sub,
         });
-
-        // const { token } = response;
-        // localStorage.setItem("token", token);
-
+        router.push("/");
       })
       .catch(() => {
         toast.error("Invalid credentials. Please try again.");

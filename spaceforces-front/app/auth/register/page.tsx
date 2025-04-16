@@ -8,13 +8,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
 
 const registerSchema = z
   .object({
@@ -45,7 +42,6 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
 
   const {
     register,
@@ -61,17 +57,10 @@ export default function RegisterPage() {
 
       // TODO: Implement actual registration logic here
       throw new Error("Not Implemented");
-      toast({
-        title: "Success",
-        description: "Account created successfully! Please sign in.",
-      });
+      toast.success("Account created successfully! Please sign in.");
       router.push("/auth/login");
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -92,8 +81,14 @@ export default function RegisterPage() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="username">Username</Label>
-                <Input id="username" className="bg-[#2a2a6f]/50 border-purple-500/30" {...register("username")} />
-                {errors.username && <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>}
+                <Input
+                  id="username"
+                  className="bg-[#2a2a6f]/50 border-purple-500/30"
+                  {...register("username")}
+                />
+                {errors.username && (
+                  <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
+                )}
               </div>
 
               <div>
@@ -104,7 +99,9 @@ export default function RegisterPage() {
                   className="bg-[#2a2a6f]/50 border-purple-500/30"
                   {...register("email")}
                 />
-                {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>}
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
+                )}
               </div>
 
               <div>
@@ -128,7 +125,9 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
-                {errors.password && <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
+                )}
               </div>
 
               <div>
@@ -158,7 +157,11 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              disabled={isLoading}
+            >
               {isLoading ? "Creating account..." : "Create account"}
             </Button>
 
