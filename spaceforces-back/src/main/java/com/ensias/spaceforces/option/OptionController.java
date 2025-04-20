@@ -1,6 +1,7 @@
 package com.ensias.spaceforces.option;
 
 import com.ensias.spaceforces.option.dto.OptionDTO;
+import com.ensias.spaceforces.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import java.util.List;
 public class OptionController {
 
     private final OptionService optionService;
+    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<OptionDTO> createOption(@RequestBody OptionDTO optionDTO) {
@@ -36,4 +38,9 @@ public class OptionController {
         return ResponseEntity.ok(optionService.getOptionById(id));
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOption(@PathVariable Long id) {
+        optionService.deleteOption(id);
+    }
 }

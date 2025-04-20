@@ -38,5 +38,5 @@ public class Question {
     private String correctOption;
 
     @Column(name = "image_url")
-    private String imageUrl;  
+    private String imageUrl;
 }
