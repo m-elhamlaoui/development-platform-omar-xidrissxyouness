@@ -1,10 +1,12 @@
 package com.ensias.spaceforces.option;
 
+import com.ensias.spaceforces.exception.ResourceNotFoundException;
 import com.ensias.spaceforces.option.dto.OptionDTO;
 import com.ensias.spaceforces.question.Question;
 import com.ensias.spaceforces.question.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,7 +20,7 @@ public class OptionService {
 
     public OptionDTO createOption(OptionDTO optionDTO) {
         Question question = questionRepository.findById(optionDTO.getQuestionId())
-                .orElseThrow(() -> new RuntimeException("Question not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
 
         Option option = new Option();
         option.setQuestion(question);
@@ -36,7 +38,7 @@ public class OptionService {
     }
     public OptionDTO getOptionById(Long id) {
         Option option = optionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Option not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Option not found with id: " + id));
         return convertToDTO(option);
     }
 
@@ -49,4 +51,11 @@ public class OptionService {
         return dto;
     }
 
+    @Transactional
+    public void deleteOption(Long optionId) {
+        if (!optionRepository.existsById(optionId)) {
+            throw new ResourceNotFoundException("Option not found with id: " + optionId);
+        }
+        optionRepository.deleteById(optionId);
+    }
 }
