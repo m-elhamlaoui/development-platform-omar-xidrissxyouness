@@ -14,6 +14,7 @@ public class QuestionDTO {
     private String tags;
     @NotNull(message = "Text is required")
     private String questionText;
-    private char correctOption;
+    private String correctOption;
+    private String imageUrl;
 
 }
