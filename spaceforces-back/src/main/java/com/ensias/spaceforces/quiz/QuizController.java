@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @RestController
@@ -19,12 +20,11 @@ import java.util.List;
 public class QuizController {
 
     private final QuizService quizService;
-    private final UserService userService; // Add this
+    private final UserService userService;
 
 
     @PostMapping
     public ResponseEntity<Quiz> createQuiz(@RequestBody QuizCreateDTO quizDTO) {
-        // Get current user from security context
         CustomUserDetails userDetails = userService.auth();
         return new ResponseEntity<>(
                 quizService.createQuiz(quizDTO, userDetails.getId()),
@@ -97,6 +97,13 @@ public class QuizController {
     public ResponseEntity<QuizDetailsDTO> getQuizDetails(
             @PathVariable Long id) {
         return ResponseEntity.ok(quizService.getQuizDetailsById(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteQuiz(@PathVariable Long id) throws AccessDeniedException {
+        CustomUserDetails userDetails = userService.auth();
+        quizService.deleteQuiz(id, userDetails.getId());
     }
 
 

@@ -4,10 +4,13 @@ import com.ensias.spaceforces.question.dto.QuestionWithOptionsDTO;
 import com.ensias.spaceforces.quiz.QuizMode;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.Builder;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Builder
 @Data
 public class QuizWithQuestionsDTO {
     private Long id;
@@ -23,5 +26,5 @@ public class QuizWithQuestionsDTO {
     private int duration;
     @NotNull(message = "Mode is required")
     private QuizMode mode;
-    private List<QuestionWithOptionsDTO> questions;  // List of questions with options
+    private List<QuestionWithOptionsDTO> questions; 
 }

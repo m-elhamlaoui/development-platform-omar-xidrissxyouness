@@ -2,6 +2,8 @@ package com.ensias.spaceforces.quiz;
 
 import com.ensias.spaceforces.contestdifficulty.ContestDifficulty;
 import com.ensias.spaceforces.contestdifficulty.ContestDifficultyRepository;
+import com.ensias.spaceforces.exception.BadRequestException;
+import com.ensias.spaceforces.exception.ResourceNotFoundException;
 import com.ensias.spaceforces.option.OptionRepository;
 import com.ensias.spaceforces.option.Option;
 import com.ensias.spaceforces.option.dto.OptionInfosDTO;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import com.ensias.spaceforces.question.Question;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +76,7 @@ public class QuizService {
 
     public Quiz getQuizById(Long id) {
         return quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id: " + id));
     }
 
     public List<Quiz> getAllQuizzes() {
@@ -135,19 +138,17 @@ public class QuizService {
 
     @Transactional
     public Quiz createQuizWithQuestions(QuizWithQuestionsDTO quizDTO, Long userId) {
-        // 1. Create the Quiz
-        ContestDifficulty difficulty = difficultyRepository.findById(quizDTO.getDifficultyId())
-                .orElseThrow(() -> new RuntimeException("Difficulty not found"));
-        User createdBy = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+//        ContestDifficulty difficulty = difficultyRepository.findById(quizDTO.getDifficultyId())
+//                .orElseThrow(() -> new RuntimeException("Difficulty not found"));
 
-        if (!quizDTO.getStartDateTime().isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException(
-                    String.format("Start DateTime (%s) must be in the future. Current time: %s",
-                            quizDTO.getStartDateTime(),
-                            LocalDateTime.now()
-                    )
-            );
+        ContestDifficulty difficulty = difficultyRepository.findById(quizDTO.getDifficultyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Difficulty not found"));
+
+        User createdBy = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (quizDTO.getStartDateTime().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Start date must be in the future");
         }
 
         Quiz quiz = Quiz.builder()
@@ -164,22 +165,20 @@ public class QuizService {
 
         Quiz savedQuiz = quizRepository.save(quiz);
 
-        // 2. Create Questions and Options
         for (QuestionWithOptionsDTO questionDTO : quizDTO.getQuestions()) {
             Question question = new Question();
-            question.setQuiz(savedQuiz);  // Link to the saved quiz
+            question.setQuiz(savedQuiz);
             question.setPoints(questionDTO.getPoints());
             question.setTags(questionDTO.getTags());
             question.setQuestionText(questionDTO.getQuestionText());
             question.setCorrectOption(questionDTO.getCorrectOption());
-            question.setImageUrl(questionDTO.getImageUrl());  // Include image URL in DTO
+            question.setImageUrl(questionDTO.getImageUrl());
 
             Question savedQuestion = questionRepository.save(question);
 
-            // 3. Create Options for this Question
             for (OptionInfosDTO optionDTO : questionDTO.getOptions()) {
                 Option option = new Option();
-                option.setQuestion(savedQuestion);  // Link to the saved question
+                option.setQuestion(savedQuestion);
                 option.setOptionText(optionDTO.getOptionText());
                 option.setValid(optionDTO.isValid());
 
@@ -187,7 +186,6 @@ public class QuizService {
             }
         }
 
-        // 4. Schedule Quiz Status Updates (if needed)
         try {
             schedulerService.scheduleQuizStatusUpdate(savedQuiz);
         } catch (SchedulerException e) {
@@ -199,11 +197,9 @@ public class QuizService {
 
     @Transactional(readOnly = true)
     public QuizDetailsDTO getQuizDetailsById(Long id) {
-        // 1. Fetch the quiz
         Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id: " + id));
 
-        // 2. Fetch questions with their options
         List<QuestionWithOptionsDTO> questions = questionRepository.findByQuizId(id).stream()
                 .map(question -> {
                     QuestionWithOptionsDTO dto = new QuestionWithOptionsDTO();
@@ -213,7 +209,6 @@ public class QuizService {
                     dto.setQuestionText(question.getQuestionText());
                     dto.setCorrectOption(question.getCorrectOption());
                     dto.setImageUrl(question.getImageUrl());
-                    // Fetch options for this question
                     List<OptionInfosDTO> options = optionRepository.findByQuestionId(question.getId()).stream()
                             .map(option -> {
                                 OptionInfosDTO optionDto = new OptionInfosDTO();
@@ -229,7 +224,6 @@ public class QuizService {
                 })
                 .toList();
 
-        // 3. Build the response
         QuizDetailsDTO dto = new QuizDetailsDTO();
         dto.setId(quiz.getId());
         dto.setTitle(quiz.getTitle());
@@ -247,6 +241,24 @@ public class QuizService {
         return dto;
     }
 
+
+    @Transactional
+    public void  deleteQuiz(Long quizId, Long userId) throws AccessDeniedException {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id: " + quizId));
+
+        if (!quiz.getCreatedBy().getId().equals(userId)) {
+            throw new AccessDeniedException("You can only delete your own quizzes");
+        }
+
+        try {
+            schedulerService.unscheduleQuizStatusUpdate(quizId);
+        } catch (SchedulerException e) {
+            throw new RuntimeException("Failed to cancel scheduled quiz updates", e);
+        }
+
+        quizRepository.delete(quiz);
+    }
 
 
 }

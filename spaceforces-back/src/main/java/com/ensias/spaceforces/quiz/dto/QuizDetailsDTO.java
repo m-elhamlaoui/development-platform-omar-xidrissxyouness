@@ -1,7 +1,6 @@
 package com.ensias.spaceforces.quiz.dto;
 
 import com.ensias.spaceforces.contestdifficulty.ContestDifficulty;
-import com.ensias.spaceforces.question.dto.QuestionDTO;
 import com.ensias.spaceforces.question.dto.QuestionWithOptionsDTO;
 import com.ensias.spaceforces.quiz.QuizMode;
 import com.ensias.spaceforces.quiz.QuizStatus;
