@@ -26,5 +26,5 @@ public class QuizWithQuestionsDTO {
     private int duration;
     @NotNull(message = "Mode is required")
     private QuizMode mode;
-    private List<QuestionWithOptionsDTO> questions;  // List of questions with options
+    private List<QuestionWithOptionsDTO> questions; 
 }

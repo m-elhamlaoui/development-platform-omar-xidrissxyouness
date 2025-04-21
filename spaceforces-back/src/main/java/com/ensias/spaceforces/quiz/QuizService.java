@@ -138,7 +138,6 @@ public class QuizService {
 
     @Transactional
     public Quiz createQuizWithQuestions(QuizWithQuestionsDTO quizDTO, Long userId) {
-        // for checking the difficulty (if needed)
 //        ContestDifficulty difficulty = difficultyRepository.findById(quizDTO.getDifficultyId())
 //                .orElseThrow(() -> new RuntimeException("Difficulty not found"));
 
