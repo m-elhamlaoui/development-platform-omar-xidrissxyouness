@@ -2,11 +2,17 @@ package com.ensias.spaceforces.quiz.dto;
 
 import com.ensias.spaceforces.quiz.QuizMode;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-@Data
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class QuizCreateDTO {
 
         private Long id;
