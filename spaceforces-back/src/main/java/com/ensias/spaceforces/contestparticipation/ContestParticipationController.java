@@ -1,7 +1,8 @@
 package com.ensias.spaceforces.contestparticipation;
 
 import com.ensias.spaceforces.contestparticipation.dto.ContestParticipationDTO;
-import com.ensias.spaceforces.quiz.dto.QuizDTO;
+import com.ensias.spaceforces.user.UserService;
+import com.ensias.spaceforces.user.config.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +16,13 @@ import java.util.List;
 public class ContestParticipationController {
 
     private final ContestParticipationService participationService;
-
+    private final UserService userService;
     @PostMapping
     public ResponseEntity<ContestParticipation> createParticipation(@RequestBody ContestParticipationDTO dto) {
+        CustomUserDetails userDetails = userService.auth();
+
         return new ResponseEntity<>(
-                participationService.createParticipation(dto),
+                participationService.createParticipation(dto, userDetails.getId()),
                 HttpStatus.CREATED
         );
     }
@@ -38,6 +41,12 @@ public class ContestParticipationController {
         return ResponseEntity.ok(participationService.getParticipationByUserId(userId));
     }
 
+    @GetMapping("/my-participations")
+    public ResponseEntity<List<ContestParticipation>> getParticipationsByUser() {
+        CustomUserDetails userDetails = userService.auth();
+        return ResponseEntity.ok(participationService.getParticipationByUserId(userDetails.getId()));
+    }
+
     @GetMapping("/quiz/{quizId}")
     public ResponseEntity<List<ContestParticipation>> getParticipationsByQuiz(
             @PathVariable Long quizId) {
@@ -53,10 +62,20 @@ public class ContestParticipationController {
         );
     }
 
+    @GetMapping("/my-participation/quiz/{quizId}")
+    public ResponseEntity<Boolean> checkUserParticipation(
+            @PathVariable Long quizId) {
+        CustomUserDetails userDetails = userService.auth();
+        return ResponseEntity.ok(
+                participationService.hasUserParticipatedInQuiz(userDetails.getId(), quizId)
+        );
+    }
+
     @DeleteMapping("/{participationId}")
     public ResponseEntity<Void> deleteParticipation(
             @PathVariable Long participationId) {
         participationService.deleteParticipation(participationId);
         return ResponseEntity.noContent().build();
     }
+
 }
