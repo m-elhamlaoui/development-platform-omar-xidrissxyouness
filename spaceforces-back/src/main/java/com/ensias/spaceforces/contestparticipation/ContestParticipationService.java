@@ -1,16 +1,17 @@
 package com.ensias.spaceforces.contestparticipation;
 
 import com.ensias.spaceforces.contestparticipation.dto.ContestParticipationDTO;
-import com.ensias.spaceforces.contestparticipation.ContestParticipationRepository;
 import com.ensias.spaceforces.quiz.Quiz;
 import com.ensias.spaceforces.quiz.QuizRepository;
-import com.ensias.spaceforces.quiz.dto.QuizDTO;
+import com.ensias.spaceforces.quiz.QuizStatus;
 import com.ensias.spaceforces.user.User;
 import com.ensias.spaceforces.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,26 +23,27 @@ public class ContestParticipationService {
     private final UserRepository userRepository;
     private final QuizRepository quizRepository;
 
-    public ContestParticipation createParticipation(ContestParticipationDTO participationDto) {
-        User user = userRepository.findById(participationDto.getUserId())
+    public ContestParticipation createParticipation(ContestParticipationDTO participationDto, Long idUser) {
+        User user = userRepository.findById(idUser)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         Quiz quiz = quizRepository.findById(participationDto.getQuizId())
                 .orElseThrow(() -> new RuntimeException("Quiz not found"));
         if (participationRepository.existsByUserIdAndQuizId(participationDto.getUserId(), participationDto.getQuizId())) {
             throw new RuntimeException("User already participated in this quiz");
         }
+        if (!((QuizStatus.CREATED).equals(quiz.getStatus()))) {
+            throw new RuntimeException("Quiz is not available for registration! Current status: " + quiz.getStatus());
+        }
         ContestParticipation participation = new ContestParticipation();
         participation.setUser(user);
         participation.setQuiz(quiz);
         participation.setScore(0);
 
-        ContestParticipation saved = participationRepository.save(participation);
-        return saved;
+        return participationRepository.save(participation);
     }
 
     public List<ContestParticipation> getAllParticipations() {
-        return participationRepository.findAll().stream()
-                .collect(Collectors.toList());
+        return new ArrayList<>(participationRepository.findAll());
     }
 
     @Transactional(readOnly = true)
@@ -50,11 +52,10 @@ public class ContestParticipationService {
                 .toList();
     }
 
-
-    // In ContestParticipationService.java
     @Transactional(readOnly = true)
     public List<ContestParticipation> getParticipationByQuizId(Long quizId) {
         return participationRepository.findByQuizId(quizId).stream()
+                .sorted(Comparator.comparingInt(ContestParticipation::getScore).reversed())
                 .toList();
     }
 
