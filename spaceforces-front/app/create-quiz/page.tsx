@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { PlusCircle, Trash2, Save, ArrowLeft, ChevronRight, Menu, Rocket, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,9 +8,26 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { uploadImage } from "@/services/uploadImage";
 import { createQuiz, type CreateQuizRequest, type QuizQuestion } from "@/services/createQuiz";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Menu,
+  PlusCircle,
+  Rocket,
+  Save,
+  Sparkles,
+  Trash2,
+  UploadCloudIcon,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+
+interface ExtendedQuizQuestion extends QuizQuestion {
+  imageUrl?: string;
+}
 
 export default function QuizCreator() {
   const router = useRouter();
@@ -21,9 +36,9 @@ export default function QuizCreator() {
   const [difficultyId, setDifficultyId] = useState(1); // 1 = Easy, 2 = Intermediate, 3 = Hard, 4 = Expert
   const [topic, setTopic] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
-  const [duration, setDuration] = useState(30); // Default 30 minutes
+  const [duration, setDuration] = useState(30); // minutes
   const [quizMode, setQuizMode] = useState("PUBLIC"); // PUBLIC, PRIVATE, OFFICIAL
-  const [questions, setQuestions] = useState<QuizQuestion[]>([
+  const [questions, setQuestions] = useState<ExtendedQuizQuestion[]>([
     {
       id: "q1",
       questionText: "What is the question?",
@@ -34,15 +49,20 @@ export default function QuizCreator() {
         { optionText: "Option 2", valid: false },
         { optionText: "Option 3", valid: false },
         { optionText: "Option 4", valid: false },
-      ]
+      ],
     },
   ]);
   const [activeQuestionId, setActiveQuestionId] = useState("q1");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const [questionImages, setQuestionImages] = useState<Record<string, File | null>>({});
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<Record<string, string>>({});
+  const [uploadingImages, setUploadingImages] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const addQuestion = () => {
-    const newQuestion: QuizQuestion = {
+    const newQuestion: ExtendedQuizQuestion = {
       id: `q${questions.length + 1}`,
       questionText: "New Question",
       points: 10,
@@ -52,7 +72,7 @@ export default function QuizCreator() {
         { optionText: "Option 2", valid: false },
         { optionText: "Option 3", valid: false },
         { optionText: "Option 4", valid: false },
-      ]
+      ],
     };
     setQuestions([...questions, newQuestion]);
     setActiveQuestionId(newQuestion.id);
@@ -63,10 +83,12 @@ export default function QuizCreator() {
       const newQuestions = questions.filter((q) => q.id !== id);
       setQuestions(newQuestions);
 
-      // Set active question to the previous one or the first one
       const index = questions.findIndex((q) => q.id === id);
       const newActiveId = index > 0 ? questions[index - 1].id : newQuestions[0].id;
       setActiveQuestionId(newActiveId);
+
+      // Remove any associated image
+      removeImage(id);
     }
   };
 
@@ -98,7 +120,6 @@ export default function QuizCreator() {
             valid: idx === optionIndex,
           }));
 
-          // Update the correctOption to match the selected option's text
           return {
             ...q,
             options: newOptions,
@@ -109,29 +130,120 @@ export default function QuizCreator() {
     );
   };
 
-  const saveQuiz = () => {
-    const payload: CreateQuizRequest = {
-      title: quizTitle,
-      description: quizDescription,
-      difficultyId: difficultyId,
-      createdById: 1, // TODO: remove 
-      topic: topic,
-      startDateTime: startDateTime || new Date().toISOString(),
-      duration: duration,
-      mode: quizMode,
-      questions: questions.map(({ id, ...question }) => question), // Remove the id field
-    };
+  const handleImageSelect = (id: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    if (file) {
+      setQuestionImages((prev) => ({
+        ...prev,
+        [id]: file,
+      }));
 
-    console.log("Quiz saved:", payload);
-    createQuiz(payload)
-      .then(() => {
-        toast.success("Quiz created successfully!");
-        router.push("/home");
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreviewUrls((prev) => ({
+        ...prev,
+        [id]: previewUrl,
+      }));
+    }
+  };
+
+  const removeImage = (id: string) => {
+    // Remove the image from state
+    setQuestionImages((prev) => {
+      const newImages = { ...prev };
+      delete newImages[id];
+      return newImages;
+    });
+
+    // Revoke the object URL to prevent memory leaks
+    if (imagePreviewUrls[id]) {
+      URL.revokeObjectURL(imagePreviewUrls[id]);
+    }
+
+    // Remove the preview URL
+    setImagePreviewUrls((prev) => {
+      const newUrls = { ...prev };
+      delete newUrls[id];
+      return newUrls;
+    });
+
+    // Remove imageUrl from the question
+    setQuestions(
+      questions.map((q) => {
+        if (q.id === id) {
+          const { imageUrl, ...questionWithoutImage } = q;
+          return questionWithoutImage;
+        }
+        return q;
       })
-      .catch((error) => {
-        console.error("Error creating quiz:", error);
-        toast.error("Failed to create quiz. Please try again.");
-      });
+    );
+  };
+
+  const uploadQuestionImages = async () => {
+    const uploadPromises = Object.entries(questionImages).map(async ([questionId, file]) => {
+      if (!file) return { questionId, imageUrl: null };
+
+      try {
+        setUploadingImages((prev) => ({ ...prev, [questionId]: true }));
+        const imageUrl = await uploadImage(file);
+        return { questionId, imageUrl };
+      } catch (error) {
+        console.error(`Error uploading image for question ${questionId}:`, error);
+        toast.error(`Failed to upload image for question ${questionId}.`);
+        return { questionId, imageUrl: null };
+      } finally {
+        setUploadingImages((prev) => ({ ...prev, [questionId]: false }));
+      }
+    });
+
+    const uploadResults = await Promise.all(uploadPromises);
+
+    const updatedQuestions = questions.map((question) => {
+      const uploadResult = uploadResults.find((result) => result.questionId === question.id);
+      return uploadResult?.imageUrl ? { ...question, imageUrl: uploadResult.imageUrl } : question;
+    });
+
+    setQuestions(updatedQuestions);
+    return updatedQuestions;
+  };
+
+  const saveQuiz = async () => {
+    try {
+      setIsSubmitting(true);
+
+      // Clone current state to avoid mid-edit conflicts
+      const currentQuestionImages = { ...questionImages };
+
+      // Upload all images first
+      const questionsWithImages = await uploadQuestionImages();
+
+      const failedUploads = Object.keys(currentQuestionImages).filter(
+        (questionId) => !questionsWithImages.find((q) => q.id === questionId)?.imageUrl
+      );
+
+      if (failedUploads.length > 0) {
+        throw new Error("Some images failed to upload");
+      }
+
+      const payload: CreateQuizRequest = {
+        title: quizTitle,
+        description: quizDescription,
+        difficultyId,
+        topic,
+        startDateTime: startDateTime || new Date().toISOString(),
+        duration,
+        mode: quizMode,
+        questions: questionsWithImages.map(({ id, ...question }) => question),
+      };
+
+      await createQuiz(payload);
+      toast.success("Quiz created successfully!");
+      router.push("/my-quizzes");
+    } catch (error) {
+      console.error("Error creating quiz:", error);
+      toast.error("Failed to create quiz. Please check all image uploads and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const scrollToQuestion = (id: string) => {
@@ -142,7 +254,6 @@ export default function QuizCreator() {
         block: "start",
       });
     }
-    // Close mobile sidebar after selection
     setSidebarOpen(false);
   };
 
@@ -178,7 +289,15 @@ export default function QuizCreator() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [questions, activeQuestionId]);
 
-  // Timeline sidebar component
+  // Clean up object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      Object.values(imagePreviewUrls).forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, [imagePreviewUrls]);
+
   const TimelineSidebar = () => (
     <div className="h-screen flex flex-col border-r border-[#9370DB]/30 bg-[#2E0854]">
       <div className="p-4 border-b border-[#9370DB]/30">
@@ -222,6 +341,11 @@ export default function QuizCreator() {
                   {index + 1}
                 </span>
                 <span className="truncate flex-1">{question.questionText || `Question ${index + 1}`}</span>
+                {question.imageUrl && (
+                  <span className="mr-1 text-[#9370DB]">
+                    <UploadCloudIcon className="h-3 w-3" />
+                  </span>
+                )}
                 {activeQuestionId === question.id && <ChevronRight className="h-4 w-4 ml-1 text-[#E6E6FA]" />}
               </button>
             ))}
@@ -239,10 +363,20 @@ export default function QuizCreator() {
         </Button>
         <Button
           onClick={saveQuiz}
-          className="w-full mt-2 justify-center bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]"
+          disabled={isSubmitting}
+          className="w-full mt-2 justify-center bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA] disabled:opacity-50"
         >
-          <Save className="h-4 w-4 mr-2" />
-          Save Quiz
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Quiz
+            </>
+          )}
         </Button>
       </div>
     </div>
@@ -288,9 +422,14 @@ export default function QuizCreator() {
               size="icon"
               variant="ghost"
               onClick={saveQuiz}
-              className="text-white hover:bg-[#4B0082]/20 hover:text-[#E6E6FA]"
+              disabled={isSubmitting}
+              className="text-white hover:bg-[#4B0082]/20 hover:text-[#E6E6FA] disabled:opacity-50"
             >
-              <Save className="h-5 w-5" />
+              {isSubmitting ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                <Save className="h-5 w-5" />
+              )}
               <span className="sr-only">Save Quiz</span>
             </Button>
           </div>
@@ -302,6 +441,7 @@ export default function QuizCreator() {
               value={quizTitle}
               onChange={(e) => setQuizTitle(e.target.value)}
               className="text-2xl font-bold border-none text-center focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-white placeholder:text-white/50"
+              placeholder="Quiz Title"
             />
             <p className="text-center text-white/70">Create your space quiz by adding questions and answers below</p>
           </div>
@@ -376,6 +516,7 @@ export default function QuizCreator() {
                       onChange={(e) => setStartDateTime(e.target.value)}
                       className="bg-[#4B0082]/30 border-[#9370DB]/30 text-white"
                     />
+                    <p className="text-gray-400 text-sm text-right">{"in (UTC +00:00)"}</p>
                   </div>
 
                   <div className="space-y-2">
@@ -485,6 +626,69 @@ export default function QuizCreator() {
                         </div>
                       </div>
 
+                      <div className="mt-4 space-y-2">
+                        <Label htmlFor={`${question.id}-image`} className="text-white">
+                          Question Image (Optional)
+                        </Label>
+                        <div className="space-y-2">
+                          {imagePreviewUrls[question.id] ? (
+                            <div className="relative">
+                              <img
+                                src={imagePreviewUrls[question.id] || "/placeholder.svg"}
+                                alt="Question preview"
+                                className="w-full h-48 object-cover rounded-md border border-[#9370DB]/30"
+                              />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600"
+                                onClick={() => removeImage(question.id)}
+                                disabled={isSubmitting}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              {question.imageUrl && (
+                                <div className="absolute bottom-2 right-2 bg-[#6A0DAD]/80 text-white text-xs px-2 py-1 rounded">
+                                  Image uploaded ✓
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center w-full">
+                              <label
+                                htmlFor={`${question.id}-image-upload`}
+                                className={cn(
+                                  "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer border-[#9370DB]/30 bg-[#4B0082]/20 hover:bg-[#4B0082]/30",
+                                  isSubmitting && "opacity-50 cursor-not-allowed"
+                                )}
+                              >
+                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                  <UploadCloudIcon className="h-6 w-6 text-white m-2" />
+                                  <p className="mb-2 text-sm text-white">
+                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                  </p>
+                                  <p className="text-xs text-white/70">PNG, JPG or GIF (MAX. 2MB)</p>
+                                </div>
+                                <input
+                                  id={`${question.id}-image-upload`}
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => handleImageSelect(question.id, e)}
+                                  disabled={isSubmitting}
+                                />
+                              </label>
+                            </div>
+                          )}
+                          {uploadingImages[question.id] && (
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                              <span className="ml-2 text-sm text-white">Uploading image...</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       <div className="grid gap-2">
                         <Label className="text-base text-white">Answer options</Label>
                         <RadioGroup
@@ -498,6 +702,7 @@ export default function QuizCreator() {
                                 value={optionIndex.toString()}
                                 id={`${question.id}-option-${optionIndex}`}
                                 className="border-[#9370DB]/50 text-[#E6E6FA]"
+                                disabled={isSubmitting}
                               />
                               <Input
                                 type="text"
@@ -505,6 +710,7 @@ export default function QuizCreator() {
                                 onChange={(e) => updateQuestionOption(question.id, optionIndex, e.target.value)}
                                 className="flex-1 bg-[#4B0082]/30 border-[#9370DB]/30 text-white placeholder:text-white/50"
                                 placeholder={`Option ${optionIndex + 1}`}
+                                disabled={isSubmitting}
                               />
                             </div>
                           ))}
@@ -522,7 +728,8 @@ export default function QuizCreator() {
             <Button
               onClick={addQuestion}
               size="icon"
-              className="dark h-12 w-12 rounded-full shadow-lg bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]"
+              disabled={isSubmitting}
+              className="dark h-12 w-12 rounded-full shadow-lg bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA] disabled:opacity-50"
             >
               <PlusCircle className="h-6 w-6" />
             </Button>

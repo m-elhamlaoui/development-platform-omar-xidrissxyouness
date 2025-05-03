@@ -6,10 +6,11 @@ export interface QuizOption {
 }
 
 export interface QuizQuestion {
-  id: string; // Local ID for UI management
+  id: string;
   questionText: string;
   points: number;
   tags: string;
+  imageUrl?: string;
   options: QuizOption[];
 }
 
@@ -24,7 +25,16 @@ export interface CreateQuizRequest {
   questions: Omit<QuizQuestion, "id">[];
 }
 
-type CreateQuizResponse = {};
+type CreateQuizResponse = {
+  title: string;
+  description: string;
+  difficultyId: number;
+  topic: string;
+  startDateTime: string;
+  duration: number;
+  mode: string;
+  questions: QuizQuestion[];
+};
 
 export const createQuiz = async (quiz: CreateQuizRequest): Promise<CreateQuizResponse> => {
   try {
