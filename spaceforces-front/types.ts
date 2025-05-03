@@ -3,7 +3,7 @@ export interface User {
   username: string;
   email: string;
   isAdmin: boolean;
-  rankId: number;
+  rank: Rank;
   points: number;
   description?: string;
 }
@@ -45,13 +45,18 @@ export interface QuizCreate {
   mode: QuizMode;
 }
 
+export interface Difficulty {
+  id: number;
+  diff: string;
+  abbreviation: string;
+}
 export interface Quiz {
   id: number;
   title: string;
   description?: string;
-  difficultyId: number;
+  difficulty: Difficulty;
   topic?: string;
-  createdById?: number;
+  createdBy: User;
   createdAt?: string;
   startDateTime?: string;
   duration: number;
@@ -59,7 +64,6 @@ export interface Quiz {
   mode: QuizMode;
 }
 
-// Enums for QuizMode and QuizStatus
 export enum QuizMode {
   PUBLIC = 'PUBLIC',
   PRIVATE = 'PRIVATE',
@@ -70,4 +74,27 @@ export enum QuizStatus {
   CREATED = 'CREATED',
   LIVE = 'LIVE',
   FINISHED = 'FINISHED',
+}
+
+export interface QuizQuestion {
+  id: number;
+  quiz: Quiz;
+  points: number;
+  tags?: string;
+  questionText: string;
+  imageUrl?: string;
+}
+
+export interface Option {
+  id: number;
+  optionText: string;
+  valid: boolean;
+}
+
+export interface Participation {
+  id: number;
+  user: User;
+  quiz: Quiz;
+  score: number;
+  completionTime: string;
 }

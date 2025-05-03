@@ -10,7 +10,6 @@ export interface GetQuizzesResponse extends Omit<Quiz, "topic" | "createdAt" | "
 export const getQuizzes = async (): Promise<GetQuizzesResponse[]> => {
   try {
     const response = await axiosInstance.get<Quiz[]>(`/quizzes`);
-    // transform the data if needed
     const transformedData = response.data.map((quiz) => ({
       ...quiz,
       topic: quiz.topic?.split(", ") || [],
