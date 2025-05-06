@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import Particles, { initParticlesEngine, IParticlesProps } from "@tsparticles/react";
 import { loadFull } from "tsparticles";
 import { ISourceOptions } from "@tsparticles/engine";
@@ -513,7 +513,7 @@ const options: ISourceOptions = {
   },
 };
 
-export default function HomePageParticles(props: IParticlesProps) {
+function HomePageParticles(props: IParticlesProps) {
   const [init, setInit] = useState(false);
 
   // this should be run only once per application lifetime
@@ -539,3 +539,5 @@ export default function HomePageParticles(props: IParticlesProps) {
     return <Particles id="tsparticles" options={options} {...props} />;
   }
 }
+
+export default memo(HomePageParticles);
