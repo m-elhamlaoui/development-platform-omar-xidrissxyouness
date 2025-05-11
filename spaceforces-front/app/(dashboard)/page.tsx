@@ -93,12 +93,12 @@ export default function SpaceforcesHome() {
       .sort((a, b) => {
         // Sort by selected option
         if (filterOptions.sortBy === "newest") {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
         } else if (filterOptions.sortBy === "difficulty") {
           const difficultyOrder = { EASY: 1, MEDIUM: 2, HARD: 3 };
           return (
-            difficultyOrder[a.difficulty as keyof typeof difficultyOrder] -
-            difficultyOrder[b.difficulty as keyof typeof difficultyOrder]
+            difficultyOrder[a.difficulty as unknown as "EASY" | "MEDIUM" | "HARD"] -
+            difficultyOrder[b.difficulty as unknown as "EASY" | "MEDIUM" | "HARD"]
           );
         }
         return 0;

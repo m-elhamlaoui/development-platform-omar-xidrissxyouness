@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import {
   Calendar,
@@ -45,9 +45,12 @@ import {
 } from "@/components/ui/select";
 import toast from "react-hot-toast";
 
-export default function NewsPage() {
+function SearchParamsProvider({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
+  return <>{children}</>;
+}
 
+export default function NewsPage() {
   // State for articles and loading
   const [articles, setArticles] = useState<SpaceNewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,15 +58,11 @@ export default function NewsPage() {
   const [newsSites, setNewsSites] = useState<string[]>([]);
 
   // State for search and filters
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedNewsSite, setSelectedNewsSite] = useState<string>(
-    searchParams.get("news_site") || ""
-  );
-  const [isFeaturedOnly, setIsFeaturedOnly] = useState(searchParams.get("is_featured") === "true");
-  const [sortOrder, setSortOrder] = useState<string>(
-    searchParams.get("ordering") || "-published_at"
-  );
+  const [selectedNewsSite, setSelectedNewsSite] = useState<string>("");
+  const [isFeaturedOnly, setIsFeaturedOnly] = useState(false);
+  const [sortOrder, setSortOrder] = useState<string>("-published_at");
   const [activeTab, setActiveTab] = useState("all");
 
   const ITEMS_PER_PAGE = 12;
@@ -167,107 +166,111 @@ export default function NewsPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-          <div className="relative w-full md:w-auto md:flex-1 max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
-            <Input
-              type="search"
-              placeholder="Search space news..."
-              className="w-full pl-8 bg-[#4B0082]/30 border-[#9370DB]/30 text-white placeholder:text-white/50"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") applyFilters();
-              }}
-            />
-          </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <SearchParamsProvider>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+              <div className="relative w-full md:w-auto md:flex-1 max-w-md">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+                <Input
+                  type="search"
+                  placeholder="Search space news..."
+                  className="w-full pl-8 bg-[#4B0082]/30 border-[#9370DB]/30 text-white placeholder:text-white/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") applyFilters();
+                  }}
+                />
+              </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filters
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 bg-[#2E0854] border-[#9370DB]/30 text-white">
-                <div className="space-y-4">
-                  <h4 className="font-medium">Filter Options</h4>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="news-site">News Source</Label>
-                    <Select value={selectedNewsSite} onValueChange={setSelectedNewsSite}>
-                      <SelectTrigger className="bg-[#4B0082]/30 border-[#9370DB]/30 text-white">
-                        <SelectValue placeholder="All Sources" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#2E0854] border-[#9370DB]/30 text-white">
-                        <SelectItem value="">All Sources</SelectItem>
-                        {newsSites.map((site) => (
-                          <SelectItem key={site} value={site}>
-                            {site}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="sort-order">Sort By</Label>
-                    <Select value={sortOrder} onValueChange={setSortOrder}>
-                      <SelectTrigger className="bg-[#4B0082]/30 border-[#9370DB]/30 text-white">
-                        <SelectValue placeholder="Newest First" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#2E0854] border-[#9370DB]/30 text-white">
-                        <SelectItem value="-published_at">Newest First</SelectItem>
-                        <SelectItem value="published_at">Oldest First</SelectItem>
-                        <SelectItem value="-updated_at">Recently Updated</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="featured"
-                      checked={isFeaturedOnly}
-                      onCheckedChange={(checked) => setIsFeaturedOnly(checked === true)}
-                    />
-                    <Label
-                      htmlFor="featured"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Featured Articles Only
-                    </Label>
-                  </div>
-
-                  <div className="flex justify-between pt-2">
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <Popover>
+                  <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={resetFilters}
                       className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
                     >
-                      <X className="h-4 w-4 mr-1" />
-                      Reset
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        applyFilters();
-                      }}
-                      className="bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]"
-                    >
-                      Apply Filters
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 bg-[#2E0854] border-[#9370DB]/30 text-white">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Filter Options</h4>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="news-site">News Source</Label>
+                        <Select value={selectedNewsSite} onValueChange={setSelectedNewsSite}>
+                          <SelectTrigger className="bg-[#4B0082]/30 border-[#9370DB]/30 text-white">
+                            <SelectValue placeholder="All Sources" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#2E0854] border-[#9370DB]/30 text-white">
+                            <SelectItem value="">All Sources</SelectItem>
+                            {newsSites.map((site) => (
+                              <SelectItem key={site} value={site}>
+                                {site}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="sort-order">Sort By</Label>
+                        <Select value={sortOrder} onValueChange={setSortOrder}>
+                          <SelectTrigger className="bg-[#4B0082]/30 border-[#9370DB]/30 text-white">
+                            <SelectValue placeholder="Newest First" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#2E0854] border-[#9370DB]/30 text-white">
+                            <SelectItem value="-published_at">Newest First</SelectItem>
+                            <SelectItem value="published_at">Oldest First</SelectItem>
+                            <SelectItem value="-updated_at">Recently Updated</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="featured"
+                          checked={isFeaturedOnly}
+                          onCheckedChange={(checked) => setIsFeaturedOnly(checked === true)}
+                        />
+                        <Label
+                          htmlFor="featured"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Featured Articles Only
+                        </Label>
+                      </div>
+
+                      <div className="flex justify-between pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={resetFilters}
+                          className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Reset
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            applyFilters();
+                          }}
+                          className="bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]"
+                        >
+                          Apply Filters
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </SearchParamsProvider>
+        </Suspense>
 
         {/* Tabs for different views */}
         <Tabs

@@ -59,7 +59,7 @@ export function QuizStatusModal({ quiz, open, onOpenChange }: QuizStatusModalPro
     // Calculate time remaining for LIVE quizzes
     if (quiz.status === "LIVE") {
       const calculateTimeRemaining = () => {
-        const startTime = new Date(quiz.startDateTime).getTime();
+        const startTime = new Date(quiz.startDateTime ?? "").getTime();
         const endTime = startTime + quiz.duration * 60 * 1000; // Convert minutes to milliseconds
         const now = new Date().getTime();
         const timeLeft = endTime - now;
@@ -96,7 +96,7 @@ export function QuizStatusModal({ quiz, open, onOpenChange }: QuizStatusModalPro
     // Calculate time until start for CREATED quizzes
     if (quiz.status === "CREATED") {
       const calculateTimeUntilStart = () => {
-        const startTime = new Date(quiz.startDateTime).getTime();
+        const startTime = new Date(quiz.startDateTime ?? "").getTime();
         const now = new Date().getTime();
         const timeUntil = startTime - now;
 
@@ -142,7 +142,7 @@ export function QuizStatusModal({ quiz, open, onOpenChange }: QuizStatusModalPro
   const calculateProgress = () => {
     if (quiz.status !== "LIVE") return 100;
 
-    const startTime = new Date(quiz.startDateTime).getTime();
+    const startTime = new Date(quiz.startDateTime ?? "").getTime();
     const endTime = startTime + quiz.duration * 60 * 1000;
     const now = new Date().getTime();
 
@@ -159,7 +159,7 @@ export function QuizStatusModal({ quiz, open, onOpenChange }: QuizStatusModalPro
 
   // Helper function to determine participant status
   const getParticipantStatus = (participation: Participation): string => {
-    const quizEndTime = new Date(quiz.startDateTime).getTime() + quiz.duration * 60 * 1000;
+    const quizEndTime = new Date(quiz.startDateTime ?? "").getTime() + quiz.duration * 60 * 1000;
     const completionTime = new Date(participation.completionTime).getTime();
 
     if (quiz.status === "FINISHED") {

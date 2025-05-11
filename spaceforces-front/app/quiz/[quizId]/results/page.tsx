@@ -1,68 +1,86 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { getQuizInfoById } from "@/services/getQuizInfoById"
-import { getParticipantsByQuizId } from "@/services/getParticipantsByQuizId"
-import { formatDate, formatDuration, getDifficultyColor } from "@/lib/utils"
-import { ArrowLeft, Award, BarChart3, Calendar, Clock, Download, Medal, Share2, Tag, Trophy, Users } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getQuizInfoById } from "@/services/getQuizInfoById";
+import { getParticipantsByQuizId } from "@/services/getParticipantsByQuizId";
+import { formatDate, formatDuration, getDifficultyColor } from "@/lib/utils";
+import {
+  ArrowLeft,
+  Award,
+  BarChart3,
+  Calendar,
+  Clock,
+  Download,
+  Medal,
+  Share2,
+  Tag,
+  Trophy,
+  Users,
+} from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "react-hot-toast";
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { Participation, Quiz } from "@/types"
-import Link from "next/link"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { Participation, Quiz } from "@/types";
+import Link from "next/link";
 
-export default function QuizResultsPage({ params }: { params: { quizId: string } }) {
-  const quizId = params.quizId
-  const router = useRouter()
-  const [quiz, setQuiz] = useState<Quiz | null>(null)
-  const [participants, setParticipants] = useState<Participation[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+interface PageParams {
+  quizId: string;
+}
+
+export default function QuizResultsPage({ params }: { params: PageParams }) {
+  const quizId = params.quizId;
+  const router = useRouter();
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [participants, setParticipants] = useState<Participation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchQuizData = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
 
         // Fetch quiz information
-        const quizData = await getQuizInfoById(quizId)
-        setQuiz(quizData)
+        const quizData = await getQuizInfoById(quizId);
+        setQuiz(quizData);
 
         // Fetch participants
-        const participantsData = await getParticipantsByQuizId(quizId)
-        setParticipants(participantsData)
+        const participantsData = await getParticipantsByQuizId(quizId);
+        setParticipants(participantsData);
 
-        setLoading(false)
+        setLoading(false);
       } catch (err) {
-        console.error("Error fetching quiz results:", err)
-        setError("Failed to load quiz results. Please try again.")
-        setLoading(false)
-        toast.error("Failed to load quiz results. Please try again.")
+        console.error("Error fetching quiz results:", err);
+        setError("Failed to load quiz results. Please try again.");
+        setLoading(false);
+        toast.error("Failed to load quiz results. Please try again.");
       }
-    }
+    };
 
-    fetchQuizData()
-  }, [quizId, toast])
+    fetchQuizData();
+  }, [quizId]);
 
   // Sort participants by score
-  const sortedParticipants = [...participants].sort((a, b) => b.score - a.score)
+  const sortedParticipants = [...participants].sort((a, b) => b.score - a.score);
 
   // Calculate average score
   const averageScore =
-    participants.length > 0 ? participants.reduce((sum, p) => sum + p.score, 0) / participants.length : 0
+    participants.length > 0
+      ? participants.reduce((sum, p) => sum + p.score, 0) / participants.length
+      : 0;
 
   // Calculate highest and lowest scores
-  const highestScore = participants.length > 0 ? Math.max(...participants.map((p) => p.score)) : 0
+  const highestScore = participants.length > 0 ? Math.max(...participants.map((p) => p.score)) : 0;
 
-  const lowestScore = participants.length > 0 ? Math.min(...participants.map((p) => p.score)) : 0
+  const lowestScore = participants.length > 0 ? Math.min(...participants.map((p) => p.score)) : 0;
 
   // Calculate score distribution
   const calculateScoreDistribution = () => {
-    if (participants.length === 0) return []
+    if (participants.length === 0) return [];
 
     // Create score ranges (0-20, 21-40, 41-60, 61-80, 81-100)
     const ranges = [
@@ -71,58 +89,58 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
       { label: "41-60%", count: 0, color: "bg-yellow-500" },
       { label: "61-80%", count: 0, color: "bg-green-500" },
       { label: "81-100%", count: 0, color: "bg-emerald-500" },
-    ]
+    ];
 
     // Calculate max possible score (assuming it's 100 per question)
-    const maxPossibleScore = 100
+    const maxPossibleScore = 100;
 
     // Count participants in each range
     participants.forEach((p) => {
-      const scorePercentage = (p.score / maxPossibleScore) * 100
-      if (scorePercentage <= 20) ranges[0].count++
-      else if (scorePercentage <= 40) ranges[1].count++
-      else if (scorePercentage <= 60) ranges[2].count++
-      else if (scorePercentage <= 80) ranges[3].count++
-      else ranges[4].count++
-    })
+      const scorePercentage = (p.score / maxPossibleScore) * 100;
+      if (scorePercentage <= 20) ranges[0].count++;
+      else if (scorePercentage <= 40) ranges[1].count++;
+      else if (scorePercentage <= 60) ranges[2].count++;
+      else if (scorePercentage <= 80) ranges[3].count++;
+      else ranges[4].count++;
+    });
 
-    return ranges
-  }
+    return ranges;
+  };
 
-  const scoreDistribution = calculateScoreDistribution()
+  const scoreDistribution = calculateScoreDistribution();
 
   // Helper function to get initials from username
   const getInitials = (username: string): string => {
-    return username.substring(0, 2).toUpperCase()
-  }
+    return username.substring(0, 2).toUpperCase();
+  };
 
   // Helper function to get medal color based on position
   const getMedalColor = (position: number) => {
     switch (position) {
       case 1:
-        return "text-yellow-400" // Gold
+        return "text-yellow-400"; // Gold
       case 2:
-        return "text-gray-300" // Silver
+        return "text-gray-300"; // Silver
       case 3:
-        return "text-amber-700" // Bronze
+        return "text-amber-700"; // Bronze
       default:
-        return "text-white/70"
+        return "text-white/70";
     }
-  }
+  };
 
   // Helper function to get background color based on position
   const getPositionBackground = (position: number) => {
     switch (position) {
       case 1:
-        return "bg-yellow-500/20 border-yellow-500/30"
+        return "bg-yellow-500/20 border-yellow-500/30";
       case 2:
-        return "bg-gray-400/20 border-gray-400/30"
+        return "bg-gray-400/20 border-gray-400/30";
       case 3:
-        return "bg-amber-700/20 border-amber-700/30"
+        return "bg-amber-700/20 border-amber-700/30";
       default:
-        return "bg-[#4B0082]/20"
+        return "bg-[#4B0082]/20";
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -132,7 +150,7 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
           <p className="mt-4 text-white/70">Loading quiz results...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !quiz) {
@@ -156,7 +174,7 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
           </div>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -236,11 +254,15 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
               <div className="pt-2 border-t border-[#9370DB]/30">
                 <div className="flex items-center gap-2 text-white/80">
                   <Calendar className="h-4 w-4 text-[#9370DB]" />
-                  <span className="text-sm">Created: {formatDate(new Date(quiz.createdAt || ""))}</span>
+                  <span className="text-sm">
+                    Created: {formatDate(new Date(quiz.createdAt || ""))}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-white/80 mt-1">
                   <Calendar className="h-4 w-4 text-[#9370DB]" />
-                  <span className="text-sm">Started: {formatDate(new Date(quiz.startDateTime || ""))}</span>
+                  <span className="text-sm">
+                    Started: {formatDate(new Date(quiz.startDateTime || ""))}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -291,7 +313,9 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                   <div key={participant.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`flex h-7 w-7 items-center justify-center rounded-full bg-[#4B0082]/50 ${getMedalColor(index + 1)}`}
+                        className={`flex h-7 w-7 items-center justify-center rounded-full bg-[#4B0082]/50 ${getMedalColor(
+                          index + 1
+                        )}`}
                       >
                         <Medal className="h-3.5 w-3.5" />
                       </div>
@@ -301,7 +325,9 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                   </div>
                 ))}
 
-                {participants.length === 0 && <p className="text-white/60 text-center py-2">No participants yet</p>}
+                {participants.length === 0 && (
+                  <p className="text-white/60 text-center py-2">No participants yet</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -338,7 +364,9 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                     {sortedParticipants.map((participant, index) => (
                       <div
                         key={participant.id}
-                        className={`flex items-center gap-3 p-3 rounded-md border ${getPositionBackground(index + 1)}`}
+                        className={`flex items-center gap-3 p-3 rounded-md border ${getPositionBackground(
+                          index + 1
+                        )}`}
                       >
                         <div className="flex items-center justify-center h-7 w-7 rounded-full bg-[#6A0DAD]/50 text-sm font-bold">
                           {index + 1}
@@ -364,7 +392,9 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8">
                     <Trophy className="h-12 w-12 text-[#9370DB]/50 mb-4" />
-                    <p className="text-white/70 text-center">No participants have completed this quiz yet.</p>
+                    <p className="text-white/70 text-center">
+                      No participants have completed this quiz yet.
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -388,14 +418,19 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                           <span className="text-white">{range.label}</span>
                           <span className="text-white/70">
                             {range.count} participant{range.count !== 1 ? "s" : ""}
-                            {participants.length > 0 && ` (${Math.round((range.count / participants.length) * 100)}%)`}
+                            {participants.length > 0 &&
+                              ` (${Math.round((range.count / participants.length) * 100)}%)`}
                           </span>
                         </div>
                         <div className="h-2 bg-[#4B0082]/30 rounded-full overflow-hidden">
                           <div
                             className={`h-full ${range.color}`}
                             style={{
-                              width: `${participants.length > 0 ? (range.count / participants.length) * 100 : 0}%`,
+                              width: `${
+                                participants.length > 0
+                                  ? (range.count / participants.length) * 100
+                                  : 0
+                              }%`,
                             }}
                           />
                         </div>
@@ -411,7 +446,9 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <p className="text-sm text-white/70">Average Score</p>
-                          <p className="text-2xl font-bold text-[#E6E6FA]">{Math.round(averageScore)}</p>
+                          <p className="text-2xl font-bold text-[#E6E6FA]">
+                            {Math.round(averageScore)}
+                          </p>
                         </div>
 
                         <div className="space-y-1">
@@ -433,8 +470,8 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                                   Math.sqrt(
                                     participants
                                       .map((p) => Math.pow(p.score - averageScore, 2))
-                                      .reduce((sum, val) => sum + val, 0) / participants.length,
-                                  ),
+                                      .reduce((sum, val) => sum + val, 0) / participants.length
+                                  )
                                 )
                               : 0}
                           </p>
@@ -444,7 +481,11 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                           <p className="text-sm text-white/70">Pass Rate</p>
                           <p className="text-2xl font-bold text-[#E6E6FA]">
                             {participants.length > 0
-                              ? `${Math.round((participants.filter((p) => p.score >= 60).length / participants.length) * 100)}%`
+                              ? `${Math.round(
+                                  (participants.filter((p) => p.score >= 60).length /
+                                    participants.length) *
+                                    100
+                                )}%`
                               : "0%"}
                           </p>
                         </div>
@@ -454,7 +495,9 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8">
                     <BarChart3 className="h-12 w-12 text-[#9370DB]/50 mb-4" />
-                    <p className="text-white/70 text-center">No data available for statistics yet.</p>
+                    <p className="text-white/70 text-center">
+                      No data available for statistics yet.
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -484,6 +527,5 @@ export default function QuizResultsPage({ params }: { params: { quizId: string }
         </div>
       </div>
     </div>
-  )
+  );
 }
-
