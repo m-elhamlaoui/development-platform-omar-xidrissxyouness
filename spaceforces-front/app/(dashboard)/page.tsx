@@ -17,12 +17,12 @@ export default function SpaceforcesHome() {
   const [allQuizzes, setAllQuizzes] = useState<GetQuizzesResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     difficulty: "all",
     category: "all",
     sortBy: "newest",
   });
-  const [liveQuizzes, setLiveQuizzes] = useState<GetQuizzesResponse[]>([]);
 
   useEffect(() => {
     // Set dark mode by default
@@ -33,11 +33,7 @@ export default function SpaceforcesHome() {
     const fetchQuizzes = async () => {
       setLoading(true);
       const quizzes = await getQuizzes();
-      const _liveQuizzes = quizzes.filter((quiz) => quiz.status === "LIVE").slice(0, 5);
-      const allQuizzes = quizzes.filter((quiz) => quiz.status !== "LIVE");
-      setAllQuizzes(allQuizzes);
-      //@ts-ignore
-      setLiveQuizzes(_liveQuizzes);
+      setAllQuizzes(quizzes);
       setLoading(false);
     };
 
@@ -65,7 +61,6 @@ export default function SpaceforcesHome() {
 
     return allQuizzes
       .filter((quiz) => {
-        // Search filter
         if (searchQuery) {
           const query = searchQuery.toLowerCase();
           const matchesTitle = quiz.title.toLowerCase().includes(query);
@@ -79,7 +74,10 @@ export default function SpaceforcesHome() {
         }
 
         // Difficulty filter
-        if (filterOptions.difficulty !== "all" && quiz.difficulty.diff !== filterOptions.difficulty) {
+        if (
+          filterOptions.difficulty !== "all" &&
+          quiz.difficulty.diff !== filterOptions.difficulty
+        ) {
           return false;
         }
 
@@ -107,6 +105,21 @@ export default function SpaceforcesHome() {
 
   const filteredQuizzes = getFilteredQuizzes();
 
+  // Close filter dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.filter-container') && isFilterOpen) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isFilterOpen]);
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
@@ -120,7 +133,9 @@ export default function SpaceforcesHome() {
                 <Planet className="mr-2 h-6 w-6 text-[#E6E6FA]" />
                 Space Quiz Explorer
               </h1>
-              <p className="text-white/70">Discover and conquer space-themed quizzes to test your cosmic knowledge</p>
+              <p className="text-white/70">
+                Discover and conquer space-themed quizzes to test your cosmic knowledge
+              </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -135,47 +150,50 @@ export default function SpaceforcesHome() {
                 />
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="relative">
+                <div className="relative filter-container">
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
                   >
                     <Filter className="h-4 w-4 mr-2" />
                     Filters
                   </Button>
-                  <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-[#1E0035] border border-[#9370DB]/30 z-20 hidden group-hover:block hover:block">
-                    <div className="p-2">
-                      <div className="mb-2">
-                        <label className="block text-sm text-white/70 mb-1">Difficulty</label>
-                        <select
-                          className="w-full h-8 rounded-md border border-[#9370DB]/30 bg-[#4B0082]/30 px-2 text-sm text-white"
-                          value={filterOptions.difficulty}
-                          onChange={(e) => handleFilterChange("difficulty", e.target.value)}
-                        >
-                          <option value="all">All Difficulties</option>
-                          <option value="EASY">Easy</option>
-                          <option value="MEDIUM">Medium</option>
-                          <option value="HARD">Hard</option>
-                        </select>
-                      </div>
-                      <div className="mb-2">
-                        <label className="block text-sm text-white/70 mb-1">Category</label>
-                        <select
-                          className="w-full h-8 rounded-md border border-[#9370DB]/30 bg-[#4B0082]/30 px-2 text-sm text-white"
-                          value={filterOptions.category}
-                          onChange={(e) => handleFilterChange("category", e.target.value)}
-                        >
-                          <option value="all">All Categories</option>
-                          <option value="astronomy">Astronomy</option>
-                          <option value="physics">Physics</option>
-                          <option value="space-exploration">Space Exploration</option>
-                          <option value="planets">Planets</option>
-                          <option value="stars">Stars</option>
-                        </select>
+                  {isFilterOpen && (
+                    <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-[#1E0035] border border-[#9370DB]/30 z-50 transition-all duration-200">
+                      <div className="p-2">
+                        <div className="mb-2">
+                          <label className="block text-sm text-white/70 mb-1">Difficulty</label>
+                          <select
+                            className="w-full h-8 rounded-md border border-[#9370DB]/30 bg-[#4B0082]/30 px-2 text-sm text-white"
+                            value={filterOptions.difficulty}
+                            onChange={(e) => handleFilterChange("difficulty", e.target.value)}
+                          >
+                            <option value="all">All Difficulties</option>
+                            <option value="EASY">Easy</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HARD">Hard</option>
+                          </select>
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-sm text-white/70 mb-1">Category</label>
+                          <select
+                            className="w-full h-8 rounded-md border border-[#9370DB]/30 bg-[#4B0082]/30 px-2 text-sm text-white"
+                            value={filterOptions.category}
+                            onChange={(e) => handleFilterChange("category", e.target.value)}
+                          >
+                            <option value="all">All Categories</option>
+                            <option value="astronomy">Astronomy</option>
+                            <option value="physics">Physics</option>
+                            <option value="space-exploration">Space Exploration</option>
+                            <option value="planets">Planets</option>
+                            <option value="stars">Stars</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <select
                   className="h-9 rounded-md border border-[#9370DB]/30 bg-[#4B0082]/30 px-3 py-1 text-sm text-white"
@@ -221,7 +239,6 @@ export default function SpaceforcesHome() {
           </div>
         </div>
         <div className="space-y-8 lg:sticky lg:top-24">
-          {/* <LiveQuizzesSidebar liveQuizzes={liveQuizzes} /> */}
           <LeaderboardSidebar />
           <SpaceStatsSidebar />
         </div>

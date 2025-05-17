@@ -27,7 +27,6 @@ import type { Quiz } from "@/types";
 import {
   BookOpen,
   Edit,
-  Filter,
   MoreHorizontal,
   Plus,
   Rocket,
@@ -136,14 +135,6 @@ export default function MyQuizzesPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
           <Button className="bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]" asChild>
             <Link href="/create-quiz">
               <Plus className="h-4 w-4 mr-2" />
