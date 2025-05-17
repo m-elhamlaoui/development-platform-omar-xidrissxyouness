@@ -34,6 +34,6 @@ export const config = {
      * - auth pages (so we don't create a redirect loop)
      * - non-auth public pages
      */
-    '/((?!api|_next/static|_next/image|auth/login|favicon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!api|_next/static|_next/image|auth/|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 };

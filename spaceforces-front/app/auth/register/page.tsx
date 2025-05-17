@@ -12,6 +12,7 @@ import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { register as registerService } from "@/services/register";
 
 const registerSchema = z
   .object({
@@ -27,8 +28,6 @@ const registerSchema = z
       .regex(/[0-9]/, "Password must contain at least one number")
       .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
     confirmPassword: z.string(),
-    terms: z.boolean().refine((val) => val === true, "You must accept the terms"),
-    privacy: z.boolean().refine((val) => val === true, "You must accept the privacy policy"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -55,12 +54,19 @@ export default function RegisterPage() {
     try {
       setIsLoading(true);
 
-      // TODO: Implement actual registration logic here
-      throw new Error("Not Implemented");
-      toast.success("Account created successfully! Please sign in.");
+      await registerService({
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      });
+
+      toast.success("Account created successfully! Redirecting to login page...");
       router.push("/auth/login");
-    } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
