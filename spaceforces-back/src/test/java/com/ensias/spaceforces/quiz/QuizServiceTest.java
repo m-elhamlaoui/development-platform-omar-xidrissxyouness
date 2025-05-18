@@ -65,7 +65,18 @@ class QuizServiceTest {
     @Test
     void createQuiz_WithPastStartTime_ThrowsException() {
         QuizCreateDTO dto = new QuizCreateDTO();
+        dto.setTitle("Test Quiz");
+        dto.setDifficultyId(1L);
+        dto.setDuration(60);
+        dto.setMode(QuizMode.PUBLIC);
         dto.setStartDateTime(LocalDateTime.now().minusHours(1));
+
+        // Mock dependencies
+        when(difficultyRepository.findById(1L))
+                .thenReturn(Optional.of(new ContestDifficulty()));
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(new User()));
+
 
         assertThrows(IllegalArgumentException.class, () ->
                 quizService.createQuiz(dto, 1L));
