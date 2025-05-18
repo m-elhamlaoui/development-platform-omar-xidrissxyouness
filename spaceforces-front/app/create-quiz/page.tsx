@@ -80,15 +80,30 @@ export default function QuizCreator() {
 
   const removeQuestion = (id: string) => {
     if (questions.length > 1) {
+      // Create a new array without the question to be removed
       const newQuestions = questions.filter((q) => q.id !== id);
-      setQuestions(newQuestions);
-
+      
+      // Find the index of the question in the original array
       const index = questions.findIndex((q) => q.id === id);
-      const newActiveId = index > 0 ? questions[index - 1].id : newQuestions[0].id;
-      setActiveQuestionId(newActiveId);
-
+      
+      // Determine the new active question ID
+      let newActiveId;
+      if (index > 0) {
+        newActiveId = questions[index - 1].id;
+      } else {
+        newActiveId = newQuestions[0].id;
+      }
+      
       // Remove any associated image
-      removeImage(id);
+      if (questionImages[id] || imagePreviewUrls[id]) {
+        removeImage(id);
+      }
+      
+      // Update the questions array first
+      setQuestions(newQuestions);
+      
+      // Then update the active question ID
+      setActiveQuestionId(newActiveId);
     }
   };
 
@@ -448,14 +463,6 @@ export default function QuizCreator() {
 
           {/* Quiz Details - Hidden on mobile */}
           <div className="hidden md:block mb-8 space-y-4">
-            <Input
-              type="text"
-              value={quizTitle}
-              onChange={(e) => setQuizTitle(e.target.value)}
-              className="text-2xl font-bold border-none text-center focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-white placeholder:text-white/50"
-              placeholder="Quiz Title"
-            />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-white">
@@ -568,22 +575,26 @@ export default function QuizCreator() {
                 <Card className="shadow-md bg-[#4B0082]/30 border-[#9370DB]/30 backdrop-blur-sm">
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-white/70 mb-1">Question {questionIndex + 1}</div>
-                        <Input
-                          type="text"
-                          value={question.questionText}
-                          onChange={(e) => updateQuestionTitle(question.id, e.target.value)}
-                          className="text-lg font-medium focus-visible:ring-1 bg-[#4B0082]/30 border-[#9370DB]/30 text-white placeholder:text-white/50"
-                          placeholder="Question title"
-                        />
-                      </div>
+                      <div className="text-sm font-medium text-white/70 mb-1">Question {questionIndex + 1}</div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="text"
+                        value={question.questionText}
+                        onChange={(e) => updateQuestionTitle(question.id, e.target.value)}
+                        className="text-lg font-medium focus-visible:ring-1 bg-[#4B0082]/30 border-[#9370DB]/30 text-white placeholder:text-white/50 flex-1"
+                        placeholder="Question title"
+                      />
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeQuestion(question.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removeQuestion(question.id);
+                        }}
                         disabled={questions.length <= 1}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 shrink-0"
                       >
                         <Trash2 className="h-5 w-5" />
                       </Button>
