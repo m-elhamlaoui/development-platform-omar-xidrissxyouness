@@ -2,40 +2,40 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-                apiVersion: v1
-                kind: Pod
-                spec:
-                serviceAccountName: jenkins-deployer
-                containers:
-                - name: docker
-                    image: docker:latest
-                    command:
-                    - cat
-                    tty: true
-                    volumeMounts:
-                    - name: docker-socket
-                    mountPath: /var/run/docker.sock
-                - name: maven
-                    image: maven:3.9.9-eclipse-temurin-23
-                    command:
-                    - cat
-                    tty: true
-                - name: node
-                    image: node:23-alpine
-                    command:
-                    - cat
-                    tty: true
-                - name: kubectl
-                    image: bitnami/kubectl:latest
-                    command:
-                    - cat
-                    tty: true
-                volumes:
-                - name: docker-socket
-                    hostPath:
-                    path: /var/run/docker.sock
-                    type: Socket
-                """
+apiVersion: v1
+kind: Pod
+spec:
+  serviceAccountName: jenkins-deployer
+  containers:
+  - name: docker
+    image: docker:latest
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: docker-socket
+      mountPath: /var/run/docker.sock
+  - name: maven
+    image: maven:3.9.9-eclipse-temurin-23
+    command:
+    - cat
+    tty: true
+  - name: node
+    image: node:23-alpine
+    command:
+    - cat
+    tty: true
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command:
+    - cat
+    tty: true
+  volumes:
+  - name: docker-socket
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+"""
         }
     }
     
@@ -163,8 +163,10 @@ pipeline {
 
     post {
         always {
-            container('docker') {
-                sh 'docker logout'
+            script {
+                container('docker') {
+                    sh 'docker logout'
+                }
             }
             echo 'Pipeline finished.'
         }
