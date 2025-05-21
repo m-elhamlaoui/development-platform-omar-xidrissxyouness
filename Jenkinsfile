@@ -110,9 +110,6 @@ spec:
         }
 
         stage('Build & Push Frontend Image') {
-            options {
-                timeout(time: 30, unit: 'MINUTES')
-            }
             when {
                 expression { env.BUILD_FRONTEND == 'true' }
             }
@@ -120,12 +117,9 @@ spec:
                 container('docker') {
                     dir('spaceforces-front') {
                         sh "docker build --memory=2g --memory-swap=4g --network=host -t ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} ."
-                        
-                        retry(3) {
                             timeout(time: 5, unit: 'MINUTES') {
                                 sh "docker push ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION}"
                             }
-                        }
                     }
                 }
             }
