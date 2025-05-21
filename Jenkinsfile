@@ -15,16 +15,6 @@ spec:
     volumeMounts:
     - name: docker-socket
       mountPath: /var/run/docker.sock
-  - name: maven
-    image: maven:3.9.9-eclipse-temurin-23
-    command:
-    - cat
-    tty: true
-  - name: node
-    image: node:23-alpine
-    command:
-    - cat
-    tty: true
   - name: kubectl
     image: bitnami/kubectl:latest
     command:
@@ -103,11 +93,6 @@ spec:
                 expression { env.BUILD_BACKEND == 'true' }
             }
             steps {
-                container('maven') {
-                    dir('spaceforces-back') {
-                        sh 'mvn clean package -DskipTests'
-                    }
-                }
                 container('docker') {
                     dir('spaceforces-back') {
                         sh "docker build -t ${DOCKER_REGISTRY}/spaceforces-backend:${BACKEND_VERSION} ."
@@ -122,12 +107,6 @@ spec:
                 expression { env.BUILD_FRONTEND == 'true' }
             }
             steps {
-                container('node') {
-                    dir('spaceforces-front') {
-                        sh 'npm ci'
-                        sh 'npm run build'
-                    }
-                }
                 container('docker') {
                     dir('spaceforces-front') {
                         sh "docker build -t ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} ."
