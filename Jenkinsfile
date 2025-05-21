@@ -103,6 +103,9 @@ spec:
         }
 
         stage('Build & Push Frontend Image') {
+            options {
+                timeout(time: 20, unit: 'MINUTES') // Longer timeout for push operations
+            }
             when {
                 expression { env.BUILD_FRONTEND == 'true' }
             }
@@ -110,7 +113,9 @@ spec:
                 container('docker') {
                     dir('spaceforces-front') {
                         sh "docker build -t ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} ."
-                        sh "docker push ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION}"
+                        retry(3) {
+                            sh "docker push ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION}"
+                        }
                     }
                 }
             }
