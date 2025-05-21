@@ -43,7 +43,7 @@ pipeline {
         DOCKER_CREDS = credentials('dockerhub-creds')
 
         GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-        BUILD_NUMBER = env.BUILD_NUMBER
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
         IMAGE_TAG = "${GIT_COMMIT_SHORT}-${BUILD_NUMBER}"
         
         BACKEND_VERSION = "${IMAGE_TAG}"
