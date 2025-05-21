@@ -2,36 +2,36 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-        apiVersion: v1
-        kind: Pod
-        spec:
-        serviceAccountName: jenkins-deployer
-        containers:
-        - name: docker
-            image: docker:latest
-            command:
-            - cat
-            tty: true
-            resources:
-            requests:
-                memory: "2Gi"
-                cpu: "1"
-            limits:
-                memory: "4Gi"
-                cpu: "2"
-            volumeMounts:
-            - name: docker-socket
-            mountPath: /var/run/docker.sock
-        - name: kubectl
-            image: bitnami/kubectl:latest
-            command:
-            - cat
-            tty: true
-        volumes:
-        - name: docker-socket
-            hostPath:
-            path: /var/run/docker.sock
-            type: Socket
+apiVersion: v1
+kind: Pod
+spec:
+  serviceAccountName: jenkins-deployer
+  containers:
+  - name: docker
+    image: docker:latest
+    command:
+    - cat
+    tty: true
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1"
+      limits:
+        memory: "4Gi"
+        cpu: "2"
+    volumeMounts:
+    - name: docker-socket
+      mountPath: /var/run/docker.sock
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command:
+    - cat
+    tty: true
+  volumes:
+  - name: docker-socket
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
         """
         }
     }
