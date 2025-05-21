@@ -12,7 +12,6 @@ RUN mvn dependency:go-offline -B
 
 # Copy the rest of the project files
 COPY src ./src
-
 # Package the application (build the JAR file)
 RUN mvn clean package -DskipTests
 
@@ -22,6 +21,8 @@ WORKDIR /app
 
 # Copy the built JAR file from the previous stage
 COPY --from=build /app/target/*.jar app.jar
+
+COPY wallet_spaceforces ./wallet_spaceforces
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

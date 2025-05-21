@@ -1,0 +1,20 @@
+services:
+  backend:
+    image: moropopi/spaceforces-backend:1.0.1
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: "production"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
+      DB_URL: "jdbc:oracle:thin:@(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.eu-paris-1.oraclecloud.com))(connect_data=(service_name=gc0dad4f749d64e_spaceforces_tpurgent.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))?TNS_ADMIN=/app/wallet_spaceforces"
+      DB_USERNAME: "admin"
+      DB_PASSWORD: "Password2020++"
+      JWT_SECRET: "lLPraR9qqZSj3B0NKDnv2RB0kVg6vl0XlLPraR9qqZSj3B0AKDnv2RB0kVg6vl0X"
+      CLOUDINARY_CLOUD_NAME: "dgryc2mgq"
+      CLOUDINARY_API_KEY: "673925351632377"
+      CLOUDINARY_API_SECRET: "u--E8uSQlui5pnd-CQ8B4e_C7PU"
+    # The Dockerfile sets WORKDIR /app and copies wallet_spaceforces to /app/wallet_spaceforces.
+    # The TNS_ADMIN path in DB_URL is relative to the WORKDIR.
+    # If wallet_spaceforces is at the root of the WORKDIR, then TNS_ADMIN=/wallet_spaceforces is correct.
+    # If it's inside another dir in WORKDIR, adjust the TNS_ADMIN path accordingly.
+    # Given your Dockerfile, TNS_ADMIN=/app/wallet_spaceforces is explicit for clarity.

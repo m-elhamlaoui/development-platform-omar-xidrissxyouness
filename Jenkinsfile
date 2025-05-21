@@ -1,31 +1,72 @@
 pipeline {
-    agent any // Or specify a specific agent/node
+    agent {
+        kubernetes {
+            yaml """
+                apiVersion: v1
+                kind: Pod
+                spec:
+                serviceAccountName: jenkins-deployer
+                containers:
+                - name: docker
+                    image: docker:latest
+                    command:
+                    - cat
+                    tty: true
+                    volumeMounts:
+                    - name: docker-socket
+                    mountPath: /var/run/docker.sock
+                - name: maven
+                    image: maven:3.9.9-eclipse-temurin-23
+                    command:
+                    - cat
+                    tty: true
+                - name: node
+                    image: node:23-alpine
+                    command:
+                    - cat
+                    tty: true
+                - name: kubectl
+                    image: bitnami/kubectl:latest
+                    command:
+                    - cat
+                    tty: true
+                volumes:
+                - name: docker-socket
+                    hostPath:
+                    path: /var/run/docker.sock
+                    type: Socket
+                """
+        }
+    }
+    
+    environment {
+        DOCKER_CREDS = credentials('dockerhub-creds')
 
-    // Optional: Trigger the pipeline periodically or via webhook
-    // For webhook, you'd configure it in your Git provider (GitHub, GitLab, etc.)
-    // and in Jenkins (e.g., using the Generic Webhook Trigger plugin or SCM-specific plugins)
+        GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        BUILD_NUMBER = env.BUILD_NUMBER
+        IMAGE_TAG = "${GIT_COMMIT_SHORT}-${BUILD_NUMBER}"
+        
+        BACKEND_VERSION = "${IMAGE_TAG}"
+        FRONTEND_VERSION = "${IMAGE_TAG}"
+    }
+
     triggers {
-        pollSCM('H/5 * * * *') // Poll every 5 minutes, adjust as needed
+        pollSCM('H/5 * * * *')
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                checkout scm // Checks out the code from the SCM configured in the Jenkins job
+                checkout scm
             }
         }
 
         stage('Determine Changes') {
             steps {
                 script {
-                    // Get the list of changed files
-                    // This command gets changes between the current commit and the previous one.
-                    // For pull requests, you might use 'git diff --name-only origin/${env.CHANGE_BRANCH} ${env.CHANGE_TARGET}'
-                    // or specific Jenkins plugin environment variables.
                     def changedFiles = sh(script: "git diff --name-only HEAD^ HEAD", returnStdout: true).trim().split('\n')
                     echo "Changed files: ${changedFiles}"
 
-                    // Set flags based on changed paths
                     env.BUILD_FRONTEND = false
                     env.BUILD_BACKEND = false
 
@@ -38,11 +79,8 @@ pipeline {
                         }
                     }
 
-                    // If no relevant files changed, you might want to skip subsequent stages
                     if (!env.BUILD_FRONTEND && !env.BUILD_BACKEND) {
                         echo "No changes in frontend or backend. Skipping builds."
-                        // currentBuild.result = 'NOT_BUILT' // Or 'ABORTED' if you prefer
-                        // return // Exit the script block or stage
                     } else {
                         echo "Frontend build needed: ${env.BUILD_FRONTEND}"
                         echo "Backend build needed: ${env.BUILD_BACKEND}"
@@ -51,38 +89,54 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
-            when {
-                expression { env.BUILD_FRONTEND == 'true' }
-            }
+        stage('Login to Docker Registry') {
             steps {
-                echo "Building Frontend..."
-                // Example frontend build commands (adjust to your actual commands)
-                dir('spaceforces-front') {
-                    // sh 'npm install' // Or yarn install
-                    // sh 'npm run build' // Or your build script
+                container('docker') {
+                    sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
                 }
-                // Archive artifacts, deploy, etc.
             }
         }
 
-        stage('Build Backend') {
+        stage('Build & Push Backend Image') {
             when {
                 expression { env.BUILD_BACKEND == 'true' }
             }
             steps {
-                echo "Building Backend..."
-                // Example backend build commands (adjust to your actual commands)
-                dir('spaceforces-back') {
-                    // sh './mvnw clean install' // Or gradle build, etc.
-                    // sh './mvnw package'
+                container('maven') {
+                    dir('spaceforces-back') {
+                        sh 'mvn clean package -DskipTests'
+                    }
                 }
-                // Archive artifacts, deploy, etc.
+                container('docker') {
+                    dir('spaceforces-back') {
+                        sh "docker build -t ${DOCKER_REGISTRY}/spaceforces-backend:${BACKEND_VERSION} ."
+                        sh "docker push ${DOCKER_REGISTRY}/spaceforces-backend:${BACKEND_VERSION}"
+                    }
+                }
             }
         }
 
-        // Optional: Stage for common tasks if either frontend or backend was built
-        stage('Post Build Actions') {
+        stage('Build & Push Frontend Image') {
+            when {
+                expression { env.BUILD_FRONTEND == 'true' }
+            }
+            steps {
+                container('node') {
+                    dir('spaceforces-front') {
+                        sh 'npm ci'
+                        sh 'npm run build'
+                    }
+                }
+                container('docker') {
+                    dir('spaceforces-front') {
+                        sh "docker build -t ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} ."
+                        sh "docker push ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION}"
+                    }
+                }
+            }
+        }
+
+        stage('Update Kubernetes Deployment') {
             when {
                 anyOf {
                     expression { env.BUILD_FRONTEND == 'true' }
@@ -90,28 +144,35 @@ pipeline {
                 }
             }
             steps {
-                echo "Performing post-build actions..."
-                // e.g., notifications, cleanup
+                container('kubectl') {
+                    script {
+                        if (env.BUILD_BACKEND == 'true') {
+                            sh "kubectl set image deployment/backend-deployment backend=${DOCKER_REGISTRY}/spaceforces-backend:${BACKEND_VERSION} -n default"
+                            sh "kubectl rollout status deployment/backend-deployment -n default"
+                        }
+                        
+                        if (env.BUILD_FRONTEND == 'true') {
+                            sh "kubectl set image deployment/frontend-deployment frontend=${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} -n default"
+                            sh "kubectl rollout status deployment/frontend-deployment -n default"
+                        }
+                    }
+                }
             }
         }
     }
 
     post {
         always {
+            container('docker') {
+                sh 'docker logout'
+            }
             echo 'Pipeline finished.'
-            // Clean up workspace if needed
-            // cleanWs()
         }
         success {
             echo 'Pipeline succeeded!'
-            // Send success notifications
         }
         failure {
             echo 'Pipeline failed!'
-            // Send failure notifications
         }
-        // notBuilt { // If you used currentBuild.result = 'NOT_BUILT'
-        //    echo 'Pipeline was not built as no relevant changes were found.'
-        // }
     }
 }

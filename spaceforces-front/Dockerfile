@@ -14,6 +14,8 @@ RUN npm install --frozen-lockfile
 # Copy the rest of the app's code
 COPY . .
 
+ENV NEXT_PUBLIC_API_URL=/api
+
 # Build the Next.js app for production
 RUN npm run build
 
