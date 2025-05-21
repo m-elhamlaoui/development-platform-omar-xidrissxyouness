@@ -41,6 +41,7 @@ spec:
     
     environment {
         DOCKER_CREDS = credentials('dockerhub-creds')
+        DOCKER_REGISTRY = "moropopi"
 
         GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
@@ -50,9 +51,9 @@ spec:
         FRONTEND_VERSION = "${IMAGE_TAG}"
     }
 
-    triggers {
-        pollSCM('H/5 * * * *')
-    }
+    // triggers {
+    //     pollSCM('H/5 * * * *')
+    // }
 
     stages {
         stage('Checkout Code') {
