@@ -2,30 +2,37 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  serviceAccountName: jenkins-deployer
-  containers:
-  - name: docker
-    image: docker:latest
-    command:
-    - cat
-    tty: true
-    volumeMounts:
-    - name: docker-socket
-      mountPath: /var/run/docker.sock
-  - name: kubectl
-    image: bitnami/kubectl:latest
-    command:
-    - cat
-    tty: true
-  volumes:
-  - name: docker-socket
-    hostPath:
-      path: /var/run/docker.sock
-      type: Socket
-"""
+        apiVersion: v1
+        kind: Pod
+        spec:
+        serviceAccountName: jenkins-deployer
+        containers:
+        - name: docker
+            image: docker:latest
+            command:
+            - cat
+            tty: true
+            resources:
+            requests:
+                memory: "2Gi"
+                cpu: "1"
+            limits:
+                memory: "4Gi"
+                cpu: "2"
+            volumeMounts:
+            - name: docker-socket
+            mountPath: /var/run/docker.sock
+        - name: kubectl
+            image: bitnami/kubectl:latest
+            command:
+            - cat
+            tty: true
+        volumes:
+        - name: docker-socket
+            hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        """
         }
     }
     
@@ -104,7 +111,7 @@ spec:
 
         stage('Build & Push Frontend Image') {
             options {
-                timeout(time: 20, unit: 'MINUTES') // Longer timeout for push operations
+                timeout(time: 30, unit: 'MINUTES')
             }
             when {
                 expression { env.BUILD_FRONTEND == 'true' }
@@ -112,9 +119,12 @@ spec:
             steps {
                 container('docker') {
                     dir('spaceforces-front') {
-                        sh "docker build -t ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} ."
+                        sh "docker build --memory=2g --memory-swap=4g --network=host -t ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} ."
+                        
                         retry(3) {
-                            sh "docker push ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION}"
+                            timeout(time: 5, unit: 'MINUTES') {
+                                sh "docker push ${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION}"
+                            }
                         }
                     }
                 }

@@ -1,41 +1,43 @@
-
 # Stage 1: Build the app
 FROM node:23-alpine AS builder
 
-# Set working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json or yarn.lock if you're using Yarn
+# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --frozen-lockfile
+# Install dependencies with production flag
+RUN npm ci --only=production
 
 # Copy the rest of the app's code
 COPY . .
 
 ENV NEXT_PUBLIC_API_URL=/api
 
-# Build the Next.js app for production
-RUN npm run build
+# Build the Next.js app
+RUN npm run build && npm prune --production
 
 # Stage 2: Run the app
 FROM node:23-alpine
 
-# Set working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy only the necessary files from the builder stage
-COPY --from=builder /app/package*.json ./
+# Copy only necessary files from builder
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.js ./next.config.js
+
+# Copy only production node_modules
 COPY --from=builder /app/node_modules ./node_modules
 
-# Set environment variable to use production mode
+# Set production environment
 ENV NODE_ENV=production
 
-# Expose port 3000
+# Expose port
 EXPOSE 3000
 
-# Start the Next.js app
+# Start the app
 CMD ["npm", "start"]
