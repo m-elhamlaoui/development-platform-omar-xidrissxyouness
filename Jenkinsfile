@@ -131,23 +131,10 @@ spec:
             steps {
                 container('maven') {
                     dir('spaceforces-back') {
-                        withEnv(['TNS_ADMIN=/app/wallet_spaceforces']) {
-                            sh 'mvn test -Dspring.profiles.active=prod-test'
+                        withEnv(['SPRING_PROFILES_ACTIVE=prod-test', 'TNS_ADMIN=/app/wallet_spaceforces']) {
+                            sh 'mvn test'
                         }
                     }
-                }
-            }
-            post {
-                always {
-                    publishTestResults testResultsPattern: 'spaceforces-back/target/surefire-reports/*.xml'
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'spaceforces-back/target/site/jacoco',
-                        reportFiles: 'index.html',
-                        reportName: 'Backend Coverage Report'
-                    ])
                 }
             }
         }
