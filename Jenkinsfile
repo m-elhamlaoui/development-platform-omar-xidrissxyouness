@@ -51,19 +51,16 @@ spec:
         secretKeyRef:
           name: cloudinary-secret
           key: cloud-name
-          namespace: default
     - name: CLOUDINARY_API_KEY
       valueFrom:
         secretKeyRef:
           name: cloudinary-secret
           key: api-key
-          namespace: default
     - name: CLOUDINARY_API_SECRET
       valueFrom:
         secretKeyRef:
           name: cloudinary-secret
           key: api-secret
-          namespace: default
   volumes:
   - name: docker-socket
     hostPath:
