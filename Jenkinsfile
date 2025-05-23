@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            yaml """
+            yaml '''
 apiVersion: v1
 kind: Pod
 spec:
@@ -39,23 +39,33 @@ spec:
       limits:
         memory: "2Gi"
         cpu: "1"
+    volumeMounts:
+    - name: oracle-wallet
+      mountPath: /app/wallet_spaceforces
+      readOnly: true
+    env:
+    - name: TNS_ADMIN
+      value: "/app/wallet_spaceforces"
   volumes:
   - name: docker-socket
     hostPath:
       path: /var/run/docker.sock
       type: Socket
-        """
+  - name: oracle-wallet
+    configMap:
+      name: oracle-wallet-files
+        '''
         }
     }
-    
+
     environment {
         DOCKER_CREDS = credentials('dockerhub-creds')
-        DOCKER_REGISTRY = "moropopi"
+        DOCKER_REGISTRY = 'moropopi'
 
         GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
         IMAGE_TAG = "${GIT_COMMIT_SHORT}-${BUILD_NUMBER}"
-        
+
         BACKEND_VERSION = "${IMAGE_TAG}"
         FRONTEND_VERSION = "${IMAGE_TAG}"
     }
@@ -74,7 +84,7 @@ spec:
         stage('Determine Changes') {
             steps {
                 script {
-                    def changedFiles = sh(script: "git diff --name-only HEAD^ HEAD", returnStdout: true).trim().split('\n')
+                    def changedFiles = sh(script: 'git diff --name-only HEAD^ HEAD', returnStdout: true).trim().split('\n')
                     echo "Changed files: ${changedFiles}"
 
                     env.BUILD_FRONTEND = false
@@ -90,7 +100,7 @@ spec:
                     }
 
                     if (!env.BUILD_FRONTEND && !env.BUILD_BACKEND) {
-                        echo "No changes in frontend or backend. Skipping builds."
+                        echo 'No changes in frontend or backend. Skipping builds.'
                     } else {
                         echo "Frontend build needed: ${env.BUILD_FRONTEND}"
                         echo "Backend build needed: ${env.BUILD_BACKEND}"
@@ -106,7 +116,9 @@ spec:
             steps {
                 container('maven') {
                     dir('spaceforces-back') {
-                        sh 'mvn test'
+                        withEnv(['TNS_ADMIN=/app/wallet_spaceforces']) {
+                            sh 'mvn test'
+                        }
                     }
                 }
             }
@@ -175,12 +187,12 @@ spec:
                     script {
                         if (env.BUILD_BACKEND == 'true') {
                             sh "kubectl set image deployment/backend-deployment backend=${DOCKER_REGISTRY}/spaceforces-backend:${BACKEND_VERSION} -n default"
-                            sh "kubectl rollout status deployment/backend-deployment -n default"
+                            sh 'kubectl rollout status deployment/backend-deployment -n default'
                         }
-                        
+
                         if (env.BUILD_FRONTEND == 'true') {
                             sh "kubectl set image deployment/frontend-deployment frontend=${DOCKER_REGISTRY}/spaceforces-frontend:${FRONTEND_VERSION} -n default"
-                            sh "kubectl rollout status deployment/frontend-deployment -n default"
+                            sh 'kubectl rollout status deployment/frontend-deployment -n default'
                         }
                     }
                 }
