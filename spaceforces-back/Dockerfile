@@ -1,28 +1,21 @@
 # Stage 1: Build the application
-FROM maven:3.9.9-eclipse-temurin-23 AS build
-
-# Set the working directory inside the container
+FROM maven:3.9.9-eclipse-temurin-23-alpine AS build
 WORKDIR /app
-
-# Copy the pom.xml file and download the project dependencies (this is cached)
 COPY pom.xml .
-
-# Download project dependencies (caching step)
 RUN mvn dependency:go-offline -B
-
-# Copy the rest of the project files
 COPY src ./src
-# Package the application (build the JAR file)
 RUN mvn clean package -DskipTests
+RUN java -Djarmode=layertools -jar target/*.jar extract
 
-# Stage 2: Run the application
-FROM openjdk:23-jdk
+# Stage 2: Run with layers
+FROM eclipse-temurin:23-jre-alpine
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
 WORKDIR /app
-
-# Copy the built JAR file from the previous stage
-COPY --from=build /app/target/*.jar app.jar
-
-# COPY wallet_spaceforces ./wallet_spaceforces
-
+COPY --from=build /app/dependencies/ ./
+COPY --from=build /app/spring-boot-loader/ ./
+COPY --from=build /app/snapshot-dependencies/ ./
+COPY --from=build /app/application/ ./
+RUN chown -R appuser:appgroup /app
+USER appuser
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "org.springframework.boot.loader.launch.JarLauncher"]

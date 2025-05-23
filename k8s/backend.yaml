@@ -59,6 +59,14 @@ spec:
                 secretKeyRef:
                   name: cloudinary-secret
                   key: api-secret
+          volumeMounts:
+            - name: oracle-wallet
+              mountPath: /app/wallet_spaceforces
+              readOnly: true
+      volumes:
+        - name: oracle-wallet
+          configMap:
+            name: oracle-wallet
 ---
 apiVersion: v1
 kind: Service

@@ -8,7 +8,7 @@ spec:
   serviceAccountName: jenkins-deployer
   containers:
   - name: docker
-    image: docker:latest
+    image: docker:26.1.0
     command:
     - cat
     tty: true
@@ -23,12 +23,12 @@ spec:
     - name: docker-socket
       mountPath: /var/run/docker.sock
   - name: kubectl
-    image: lachlanevenson/k8s-kubectl:latest
+    image: lachlanevenson/k8s-kubectl:v1.25.4
     command:
     - cat
     tty: true
   - name: maven
-    image: maven:3.9.9-eclipse-temurin-23
+    image: maven:3.9.9-eclipse-temurin-23-alpine
     command:
     - cat
     tty: true
