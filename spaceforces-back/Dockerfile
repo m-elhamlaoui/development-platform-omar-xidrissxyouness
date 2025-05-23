@@ -22,7 +22,7 @@ WORKDIR /app
 # Copy the built JAR file from the previous stage
 COPY --from=build /app/target/*.jar app.jar
 
-COPY wallet_spaceforces ./wallet_spaceforces
+# COPY wallet_spaceforces ./wallet_spaceforces
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

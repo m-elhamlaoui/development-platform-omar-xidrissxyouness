@@ -42,3 +42,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+k8s/backend-config.yaml
+k8s/*secret*.yaml
+k8s/*wallet*.yaml

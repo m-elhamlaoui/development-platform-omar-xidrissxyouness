@@ -23,11 +23,22 @@ spec:
     - name: docker-socket
       mountPath: /var/run/docker.sock
   - name: kubectl
-    image: bitnami/kubectl:latest
     image: lachlanevenson/k8s-kubectl:latest
     command:
     - cat
     tty: true
+  - name: maven
+    image: maven:3.9.9-eclipse-temurin-23
+    command:
+    - cat
+    tty: true
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1"
   volumes:
   - name: docker-socket
     hostPath:
@@ -84,6 +95,32 @@ spec:
                         echo "Frontend build needed: ${env.BUILD_FRONTEND}"
                         echo "Backend build needed: ${env.BUILD_BACKEND}"
                     }
+                }
+            }
+        }
+
+        stage('Test Backend') {
+            when {
+                expression { env.BUILD_BACKEND == 'true' }
+            }
+            steps {
+                container('maven') {
+                    dir('spaceforces-back') {
+                        sh 'mvn test'
+                    }
+                }
+            }
+            post {
+                always {
+                    publishTestResults testResultsPattern: 'spaceforces-back/target/surefire-reports/*.xml'
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'spaceforces-back/target/site/jacoco',
+                        reportFiles: 'index.html',
+                        reportName: 'Backend Coverage Report'
+                    ])
                 }
             }
         }
