@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 **/src/main/resources/application-local.properties
+**/src/main/resources/application-test.properties
 
 ### STS ###
 .apt_generated
@@ -38,3 +39,5 @@ wallet_spaceforces
 docker-compose.yaml
 
 data/
+mvnw/
+mvnw.cmd
