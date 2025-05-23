@@ -34,3 +34,7 @@ build/
 .vscode/
 
 wallet_spaceforces
+
+docker-compose.yaml
+
+data/
