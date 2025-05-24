@@ -5,6 +5,7 @@ export interface User {
   isAdmin: boolean;
   rank: Rank;
   points: number;
+  description?: string;
 }
 
 export interface Rank {
