@@ -131,7 +131,7 @@ spec:
             steps {
                 container('maven') {
                     dir('spaceforces-back') {
-                        withEnv(['SPRING_PROFILES_ACTIVE=prod-test', 'TNS_ADMIN=/app/wallet_spaceforces']) {
+                        withEnv(['SPRING_PROFILES_ACTIVE=test', 'TNS_ADMIN=/app/wallet_spaceforces']) {
                             sh 'mvn test'
                         }
                     }
