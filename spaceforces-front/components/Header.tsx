@@ -12,9 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuthStore } from "@/lib/store";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const user = useAuthStore((state) => state.user);
 
   return (
     <header className="sticky top-0 z-20 backdrop-blur-md bg-black/40 border-b border-[#9370DB]/30">
@@ -48,12 +50,12 @@ export default function Header() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <Button className="hidden md:flex bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]" asChild>
+            {user?.isAdmin ? <Button className="hidden md:flex bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]" asChild>
               <Link href="/create-quiz">
                 <Rocket className="mr-2 h-4 w-4" />
                 Create Quiz
               </Link>
-            </Button>
+            </Button> : null}
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
