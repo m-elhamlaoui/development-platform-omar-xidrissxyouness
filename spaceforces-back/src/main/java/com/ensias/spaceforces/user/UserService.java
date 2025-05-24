@@ -44,12 +44,17 @@ public class UserService {
             throw new EmailTakenException();
         }
 
+        // Get the default rank (first one in the database)
+        Rank defaultRank = rankRepository.findAll()
+                .stream().min(Comparator.comparing(Rank::getId))
+                .orElseThrow(() -> new IllegalStateException("No ranks found in the system"));
+
         User newUser = new User();
         newUser.setUsername(registrationDTO.getUsername());
         newUser.setEmail(registrationDTO.getEmail());
         newUser.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         newUser.setAdmin(false);
-        newUser.setRank(rankRepository.getReferenceById(1L));
+        newUser.setRank(defaultRank);
         newUser.setDescription(registrationDTO.getDescription());
         newUser.setPoints(0);
         userRepository.save(newUser);

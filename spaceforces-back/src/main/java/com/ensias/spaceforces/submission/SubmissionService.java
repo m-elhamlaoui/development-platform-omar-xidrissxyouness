@@ -2,6 +2,8 @@ package com.ensias.spaceforces.submission;
 
 import com.ensias.spaceforces.contestparticipation.ContestParticipation;
 import com.ensias.spaceforces.contestparticipation.ContestParticipationRepository;
+import com.ensias.spaceforces.exception.BadRequestException;
+import com.ensias.spaceforces.exception.ResourceNotFoundException;
 import com.ensias.spaceforces.option.Option;
 import com.ensias.spaceforces.option.OptionRepository;
 import com.ensias.spaceforces.question.Question;
@@ -37,7 +39,6 @@ public class SubmissionService {
     private final OptionRepository optionRepository;
     private final ContestParticipationRepository participationRepository;
     private final RankRepository rankRepository;
-    private final QuizService quizService;
 
 
     public List<SubmissionDTO> getAllSubmissions() {
@@ -81,6 +82,7 @@ public class SubmissionService {
     @Transactional
     public ContestParticipation processQuizSubmission(QuizSubmissionRequest request, Long idUser) {
         Long quizId = validateSameQuiz(request.getSubmissions());
+
         int totalScore = 0;
         for (QuizSubmissionRequest.QuestionSubmission qs : request.getSubmissions()) {
             Submission submission = processSingleSubmission(idUser, qs);
@@ -92,15 +94,15 @@ public class SubmissionService {
 
     private Submission processSingleSubmission(Long userId, QuizSubmissionRequest.QuestionSubmission qs) {
         if (submissionRepository.existsByUserIdAndQuestionId(userId, qs.getQuestionId())) {
-            throw new RuntimeException("User already submitted answer for question: " + qs.getQuestionId());
+            throw new BadRequestException("User already submitted answer for question: " + qs.getQuestionId());
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Question question = questionRepository.findById(qs.getQuestionId())
-                .orElseThrow(() -> new RuntimeException("Question not found: " + qs.getQuestionId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found: " + qs.getQuestionId()));
         Option option = optionRepository.findById(qs.getOptionId())
-                .orElseThrow(() -> new RuntimeException("Option not found: " + qs.getOptionId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Option not found: " + qs.getOptionId()));
 
         int score = option.isValid() ? question.getPoints() : 0;
 
@@ -128,7 +130,6 @@ public class SubmissionService {
         participation.setCompletionTime(completionTime);
 
 
-      
         User user = userRepository.findById(userId).orElseThrow();
         user.setPoints(user.getPoints() + totalScore);
         checkAndUpdateUserRank(user, user.getPoints());
@@ -147,21 +148,20 @@ public class SubmissionService {
     private Long validateSameQuiz(List<QuizSubmissionRequest.QuestionSubmission> submissions) {
         Set<Long> quizIds = submissions.stream()
                 .map(qs -> questionRepository.findById(qs.getQuestionId())
-                        .orElseThrow(() -> new RuntimeException("Question not found: " + qs.getQuestionId()))
+                        .orElseThrow(() -> new ResourceNotFoundException("Question not found: " + qs.getQuestionId()))
                         .getQuiz().getId())
                 .collect(Collectors.toSet());
 
         if (quizIds.size() != 1) {
-            throw new RuntimeException("All questions must be from the same quiz");
+            throw new BadRequestException("All questions must be from the same quiz");
         }
         Long quizId = quizIds.iterator().next();
         Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new RuntimeException("Quiz not found: " + quizId));
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found: " + quizId));
 
         if (!((QuizStatus.LIVE).equals(quiz.getStatus()))) {
-            throw new RuntimeException("Quiz is not Live! Current status: " + quiz.getStatus());
+            throw new BadRequestException("Quiz is not Live! Current status: " + quiz.getStatus());
         }
-
 
         return quizId;
     }

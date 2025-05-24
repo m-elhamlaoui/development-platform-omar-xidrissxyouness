@@ -1,11 +1,17 @@
 package com.ensias.spaceforces.rank;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "rank")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Rank {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
