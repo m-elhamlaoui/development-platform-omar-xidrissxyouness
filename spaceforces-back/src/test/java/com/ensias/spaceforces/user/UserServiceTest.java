@@ -18,6 +18,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -64,9 +65,15 @@ class UserServiceTest {
     @Test
     void registerUser_ValidInput_Success() throws EmailTakenException {
         // Arrange
+        Rank defaultRank = new Rank();
+        defaultRank.setId(1L);
+        defaultRank.setTitle("Beginner");
+        defaultRank.setMinPoints(0);
+        defaultRank.setMaxPoints(100);
+
         when(userRepository.existsByEmail(any())).thenReturn(false);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
-        when(rankRepository.getReferenceById(1L)).thenReturn(new Rank());
+        when(rankRepository.findAll()).thenReturn(List.of(defaultRank));
 
         // Act
         userService.registerUser(registrationDTO);
@@ -158,5 +165,16 @@ class UserServiceTest {
         // Act & Assert
         assertThrows(IllegalStateException.class, () ->
                 userService.makeUserAdmin(1L));
+    }
+
+    @Test
+    void registerUser_NoRanksInSystem_ThrowsException() {
+        // Arrange
+        when(userRepository.existsByEmail(any())).thenReturn(false);
+        when(rankRepository.findAll()).thenReturn(List.of());
+
+        // Act & Assert
+        assertThrows(IllegalStateException.class, () ->
+                userService.registerUser(registrationDTO));
     }
 }
