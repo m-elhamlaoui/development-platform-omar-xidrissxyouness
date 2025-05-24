@@ -12,7 +12,7 @@ interface AuthState {
 interface QuizCreationState {
   title: string;
   topic: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'Basics' | 'Easy' | 'Medium' | 'Hard' | 'Expert';
   questions: Array<{
     question: string;
     answers: string[];
@@ -20,7 +20,7 @@ interface QuizCreationState {
   }>;
   setTitle: (title: string) => void;
   settopic: (topic: string) => void;
-  setDifficulty: (difficulty: 'easy' | 'medium' | 'hard') => void;
+  setDifficulty: (difficulty: 'Basics' | 'Easy' | 'Medium' | 'Hard' | 'Expert') => void;
   addQuestion: (question: string, answers: string[], correctAnswer: number) => void;
   removeQuestion: (index: number) => void;
   resetQuiz: () => void;
@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>()(
 export const useQuizCreationStore = create<QuizCreationState>((set) => ({
   title: '',
   topic: '',
-  difficulty: 'medium',
+  difficulty: 'Medium',
   questions: [],
   setTitle: (title) => set({ title }),
   settopic: (topic) => set({ topic }),
@@ -60,7 +60,7 @@ export const useQuizCreationStore = create<QuizCreationState>((set) => ({
     set({
       title: '',
       topic: '',
-      difficulty: 'medium',
+      difficulty: 'Medium',
       questions: [],
     }),
 }));

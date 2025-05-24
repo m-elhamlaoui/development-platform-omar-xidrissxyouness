@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, SpaceIcon as Planet, Search } from "lucide-react";
+import { Filter, SpaceIcon as Planet, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import LeaderboardSidebar from "@/components/sidebar/leaderboard-sidebar";
 import SpaceStatsSidebar from "@/components/sidebar/space-stats-sidebar";
@@ -23,6 +23,8 @@ export default function SpaceforcesHome() {
     category: "all",
     sortBy: "newest",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6); // 6 quizzes per page
 
   useEffect(() => {
     // Set dark mode by default
@@ -93,17 +95,39 @@ export default function SpaceforcesHome() {
         if (filterOptions.sortBy === "newest") {
           return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
         } else if (filterOptions.sortBy === "difficulty") {
-          const difficultyOrder = { EASY: 1, MEDIUM: 2, HARD: 3 };
+          const difficultyOrder = { "Basics": 1, "Easy": 2, "Medium": 3, "Hard": 4, "Expert": 5 };
           return (
-            difficultyOrder[a.difficulty as unknown as "EASY" | "MEDIUM" | "HARD"] -
-            difficultyOrder[b.difficulty as unknown as "EASY" | "MEDIUM" | "HARD"]
+            (difficultyOrder[a.difficulty.diff as keyof typeof difficultyOrder] || 0) -
+            (difficultyOrder[b.difficulty.diff as keyof typeof difficultyOrder] || 0)
           );
         }
         return 0;
       });
   };
 
-  const filteredQuizzes = getFilteredQuizzes();
+  const getPaginatedQuizzes = () => {
+    const filtered = getFilteredQuizzes();
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return {
+      quizzes: filtered.slice(startIndex, endIndex),
+      totalQuizzes: filtered.length,
+      totalPages: Math.ceil(filtered.length / itemsPerPage),
+    };
+  };
+
+  const { quizzes: paginatedQuizzes, totalQuizzes, totalPages } = getPaginatedQuizzes();
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of quiz list
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset to page 1 when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterOptions]);
 
   // Close filter dropdown when clicking outside
   useEffect(() => {
@@ -171,9 +195,11 @@ export default function SpaceforcesHome() {
                             onChange={(e) => handleFilterChange("difficulty", e.target.value)}
                           >
                             <option value="all">All Difficulties</option>
-                            <option value="EASY">Easy</option>
-                            <option value="MEDIUM">Medium</option>
-                            <option value="HARD">Hard</option>
+                            <option value="Basics">Basics</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                            <option value="Expert">Expert</option>
                           </select>
                         </div>
                         <div className="mb-2">
@@ -210,12 +236,82 @@ export default function SpaceforcesHome() {
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
               </div>
-            ) : filteredQuizzes.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
-                {filteredQuizzes.map((quiz) => (
-                  <QuizCard key={quiz.id} quiz={quiz} onQuizSelect={handleQuizSelect} />
-                ))}
-              </div>
+            ) : paginatedQuizzes.length > 0 ? (
+              <>
+                <div className="mb-4 text-white/70 text-sm">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalQuizzes)} of {totalQuizzes} quizzes
+                </div>
+                <div className="grid grid-cols-1 gap-4 mb-8">
+                  {paginatedQuizzes.map((quiz) => (
+                    <QuizCard key={quiz.id} quiz={quiz} onQuizSelect={handleQuizSelect} />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white disabled:opacity-50"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        const showPage = 
+                          page === 1 || 
+                          page === totalPages || 
+                          (page >= currentPage - 1 && page <= currentPage + 1);
+                        
+                        const showEllipsis = 
+                          (page === currentPage - 2 && currentPage > 3) ||
+                          (page === currentPage + 2 && currentPage < totalPages - 2);
+                        
+                        if (showEllipsis) {
+                          return (
+                            <span key={page} className="px-2 text-white/50">
+                              ...
+                            </span>
+                          );
+                        }
+                        
+                        if (!showPage) return null;
+                        
+                        return (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(page)}
+                            className={
+                              currentPage === page
+                                ? "bg-[#4B0082] text-white"
+                                : "border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
+                            }
+                          >
+                            {page}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white disabled:opacity-50"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="flex flex-col items-center justify-center h-64">
                 <p className="text-white/70 mb-2">No quizzes match your search criteria.</p>

@@ -33,7 +33,7 @@ export default function QuizCreator() {
   const router = useRouter();
   const [quizTitle, setQuizTitle] = useState("");
   const [quizDescription, setQuizDescription] = useState("");
-  const [difficultyId, setDifficultyId] = useState(1); // 1 = Easy, 2 = Intermediate, 3 = Hard, 4 = Expert
+  const [difficultyId, setDifficultyId] = useState(1); // 1 = Basics, 2 = Easy, 3 = Medium, 4 = Hard, 5 = Expert
   const [topic, setTopic] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
   const [duration, setDuration] = useState(30); // minutes
@@ -335,7 +335,7 @@ export default function QuizCreator() {
         </div>
         <div className="mt-2 text-xs text-white/70">
           {topic ? topic : "No topic"} •{" "}
-          {difficultyId === 1 ? "Easy" : difficultyId === 2 ? "Intermediate" : difficultyId === 3 ? "Hard" : "Expert"}
+          {difficultyId === 1 ? "Basics" : difficultyId === 2 ? "Easy" : difficultyId === 3 ? "Medium" : difficultyId === 4 ? "Hard" : "Expert"}
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
@@ -489,10 +489,11 @@ export default function QuizCreator() {
                       onChange={(e) => setDifficultyId(Number(e.target.value))}
                       className="w-full rounded-md border border-[#9370DB]/30 bg-[#4B0082]/30 px-3 py-2 text-sm text-white"
                     >
-                      <option value={1}>Easy</option>
-                      <option value={2}>Intermediate</option>
-                      <option value={3}>Hard</option>
-                      <option value={4}>Expert</option>
+                      <option value={1}>Basics</option>
+                      <option value={2}>Easy</option>
+                      <option value={3}>Medium</option>
+                      <option value={4}>Hard</option>
+                      <option value={5}>Expert</option>
                     </select>
                   </div>
 

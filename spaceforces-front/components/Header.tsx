@@ -2,10 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Rocket, Menu, X, Sparkles } from "lucide-react";
+import { Search, Rocket, Menu, X, Sparkles, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -48,10 +54,24 @@ export default function Header() {
                 Create Quiz
               </Link>
             </Button>
-            <Avatar className="h-8 w-8 border border-[#9370DB]/50">
-              <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="h-8 w-8 border border-[#9370DB]/50 cursor-pointer">
+                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-[#1a1a4f]/90 border-[#9370DB]/30 backdrop-blur-sm">
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center text-white/70 hover:text-white">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button
               variant="ghost"
               size="icon"
@@ -85,6 +105,9 @@ export default function Header() {
               </Link>
               <Link href="/leaderboard" className="text-sm font-medium text-white/70 hover:text-white px-2 py-1">
                 Leaderboard
+              </Link>
+              <Link href="/profile" className="text-sm font-medium text-white/70 hover:text-white px-2 py-1">
+                Profile
               </Link>
             </nav>
             <Button className="w-full bg-[#6A0DAD] hover:bg-[#6A0DAD]/80 text-[#E6E6FA]" asChild>

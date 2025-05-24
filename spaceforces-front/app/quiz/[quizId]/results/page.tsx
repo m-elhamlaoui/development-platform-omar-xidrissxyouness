@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getQuizInfoById } from "@/services/getQuizInfoById";
 import { getParticipantsByQuizId } from "@/services/getParticipantsByQuizId";
+import { getQuizDetails } from "@/services/getQuizDetails";
 import { formatDate, formatDuration, getDifficultyColor } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -17,6 +18,9 @@ import {
   Tag,
   Trophy,
   Users,
+  FileText,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "react-hot-toast";
@@ -24,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Participation, Quiz } from "@/types";
+import type { Participation, Quiz, QuizDetails } from "@/types";
 import Link from "next/link";
 
 interface PageParams {
@@ -35,6 +39,7 @@ export default function QuizResultsPage({ params }: { params: PageParams }) {
   const quizId = params.quizId;
   const router = useRouter();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quizDetails, setQuizDetails] = useState<QuizDetails | null>(null);
   const [participants, setParticipants] = useState<Participation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +52,10 @@ export default function QuizResultsPage({ params }: { params: PageParams }) {
         // Fetch quiz information
         const quizData = await getQuizInfoById(quizId);
         setQuiz(quizData);
+
+        // Fetch quiz details with questions
+        const quizDetailsData = await getQuizDetails(quizId);
+        setQuizDetails(quizDetailsData);
 
         // Fetch participants
         const participantsData = await getParticipantsByQuizId(quizId);
@@ -196,25 +205,6 @@ export default function QuizResultsPage({ params }: { params: PageParams }) {
               <h1 className="text-3xl font-bold mb-2 text-white">{quiz.title}</h1>
               <p className="text-white/70">{quiz.description || "No description provided."}</p>
             </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="dark border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
-              >
-                <Share2 className="mr-2 h-4 w-4" />
-                Share
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="dark border-[#9370DB]/30 text-white hover:bg-[#4B0082]/20 hover:text-white"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -347,6 +337,12 @@ export default function QuizResultsPage({ params }: { params: PageParams }) {
               className="data-[state=active]:bg-[#6A0DAD] data-[state=active]:text-[#E6E6FA]"
             >
               Statistics
+            </TabsTrigger>
+            <TabsTrigger
+              value="questions"
+              className="data-[state=active]:bg-[#6A0DAD] data-[state=active]:text-[#E6E6FA]"
+            >
+              Questions & Answers
             </TabsTrigger>
           </TabsList>
 
@@ -497,6 +493,98 @@ export default function QuizResultsPage({ params }: { params: PageParams }) {
                     <BarChart3 className="h-12 w-12 text-[#9370DB]/50 mb-4" />
                     <p className="text-white/70 text-center">
                       No data available for statistics yet.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="questions" className="space-y-4">
+            <Card className="bg-black/40 border-[#9370DB]/30 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl text-white flex items-center">
+                  <FileText className="mr-2 h-5 w-5 text-[#9370DB]" />
+                  Questions & Correct Answers
+                </CardTitle>
+                <CardDescription className="text-white/70">
+                  Review all questions from this quiz with their correct answers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {quizDetails?.questions && quizDetails.questions.length > 0 ? (
+                  <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2">
+                    {quizDetails.questions.map((question, index) => (
+                      <div
+                        key={question.id}
+                        className="p-4 rounded-lg border border-[#9370DB]/20 bg-[#4B0082]/10"
+                      >
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-[#6A0DAD]/50 text-sm font-bold">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-medium text-white mb-2">
+                              {question.questionText}
+                            </h3>
+                            {question.imageUrl && (
+                              <div className="mb-3">
+                                <img
+                                  src={question.imageUrl}
+                                  alt="Question image"
+                                  className="max-w-md rounded-lg border border-[#9370DB]/30"
+                                />
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4 text-sm text-white/60 mb-3">
+                              <span>Points: {question.points}</span>
+                              {question.tags && <span>Tags: {question.tags}</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="ml-11 space-y-2">
+                          <h4 className="text-sm font-medium text-white/80 mb-2">Answer Options:</h4>
+                          {question.options.map((option) => (
+                            <div
+                              key={option.id}
+                              className={`flex items-center gap-3 p-3 rounded-md border ${
+                                option.valid
+                                  ? "border-green-500/50 bg-green-500/10"
+                                  : "border-[#9370DB]/20 bg-[#4B0082]/5"
+                              }`}
+                            >
+                              {option.valid ? (
+                                <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />
+                              ) : (
+                                <XCircle className="h-5 w-5 text-red-400/50 flex-shrink-0" />
+                              )}
+                              <span
+                                className={`text-sm ${
+                                  option.valid ? "text-green-100 font-medium" : "text-white/70"
+                                }`}
+                              >
+                                {option.optionText}
+                              </span>
+                              {option.valid && (
+                                <Badge
+                                  variant="outline"
+                                  className="ml-auto text-xs bg-green-500/20 text-green-300 border-green-500/30"
+                                >
+                                  Correct Answer
+                                </Badge>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <FileText className="h-12 w-12 text-[#9370DB]/50 mb-4" />
+                    <p className="text-white/70 text-center">
+                      No questions available for this quiz.
                     </p>
                   </div>
                 )}

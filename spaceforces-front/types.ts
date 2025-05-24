@@ -5,84 +5,43 @@ export interface User {
   isAdmin: boolean;
   rank: Rank;
   points: number;
-  description?: string;
-}
-
-export interface Submission {
-  id: number;
-  userId: number;
-  questionId: number;
-  optionId: number;
 }
 
 export interface Rank {
   id: number;
   title: string;
-  abbreviation?: string;
+  abbreviation: string;
   minPoints: number;
-  maxPoints?: number;
+  maxPoints: number;
 }
 
-export interface Question {
-  id: number;
-  quizId: number;
-  points: number;
-  tags?: string;
-  questionText: string;
-  correctOption: string;
-}
-
-export interface QuizCreate {
-  id: number;
-  title: string;
-  description?: string;
-  difficultyId: number;
-  topic?: string;
-  createdById?: number;
-  createdAt?: string;
-  startDateTime?: string;
-  duration: number;
-  mode: QuizMode;
-}
-
-export interface Difficulty {
+export interface ContestDifficulty {
   id: number;
   diff: string;
   abbreviation: string;
 }
+
 export interface Quiz {
   id: number;
   title: string;
   description?: string;
-  difficulty: Difficulty;
+  difficulty: ContestDifficulty;
   topic?: string;
   createdBy: User;
   createdAt?: string;
   startDateTime?: string;
   duration: number;
-  status?: QuizStatus;
-  mode: QuizMode;
-}
-
-export enum QuizMode {
-  PUBLIC = 'PUBLIC',
-  PRIVATE = 'PRIVATE',
-  OFFICIAL = 'OFFICIAL',
-}
-
-export enum QuizStatus {
-  CREATED = 'CREATED',
-  LIVE = 'LIVE',
-  FINISHED = 'FINISHED',
+  status: string;
+  mode: string;
 }
 
 export interface QuizQuestion {
   id: number;
-  quiz: Quiz;
+  questionText: string;
   points: number;
   tags?: string;
-  questionText: string;
   imageUrl?: string;
+  correctOption?: string;
 }
 
 export interface Option {
@@ -91,10 +50,43 @@ export interface Option {
   valid: boolean;
 }
 
+export interface QuestionWithOptions extends QuizQuestion {
+  options: Option[];
+}
+
+export interface QuizDetails {
+  id: number;
+  title: string;
+  description?: string;
+  difficultyId: ContestDifficulty;
+  topic?: string;
+  createdById: User;
+  createdAt?: string;
+  startDateTime?: string;
+  duration: number;
+  status: string;
+  mode: string;
+  questions: QuestionWithOptions[];
+}
+
 export interface Participation {
   id: number;
   user: User;
   quiz: Quiz;
   score: number;
   completionTime: string;
+}
+
+export interface Submission {
+  id: number;
+  questionId: number;
+  optionId: number;
+  score: number;
+  completionTime: string;
+}
+
+export enum QuizStatus {
+  CREATED = "CREATED",
+  LIVE = "LIVE", 
+  FINISHED = "FINISHED"
 }
