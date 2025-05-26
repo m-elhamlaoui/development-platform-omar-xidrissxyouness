@@ -1,67 +1,275 @@
 # 🌠 SpaceForces
 
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.3-green.svg)](https://spring.io/projects/spring-boot)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.17-black.svg)](https://nextjs.org/)
+[![Java](https://img.shields.io/badge/Java-23-orange.svg)](https://openjdk.java.net/)
+[![Node.js](https://img.shields.io/badge/Node.js-18.2.0-green.svg)](https://nodejs.org/)
+
 **SpaceForces** is an interactive web application designed for space enthusiasts. It allows users to stay up to date with real-time space news and test their knowledge through dynamically generated quizzes.
 
-## Project Overview
+## 📋 Table of Contents
 
-The main goal of SpaceForces is to blend **information** and **entertainment** around space exploration. Users can:
+- [Project Overview](#-project-overview)
+- [Features](#-features)
+- [Technologies Used](#-technologies-used)
+- [Architecture](#-architecture)
+- [Getting Started](#-getting-started)
+- [DevOps & Deployment](#-devops--deployment)
+- [Video Demo](#-video--demo)
+- [Team](#-team)
 
-- View the latest space-related news via Spaceflight News API integration.
-- Participate in interactive quizzes with automatic scoring and rankings.
-- Manage their personal user profiles.
-- Access an admin panel to create and edit quiz content.
+## 🚀 Project Overview
 
-## Technologies Used
+The main goal of SpaceForces is to blend **information** and **entertainment** around space exploration. Our platform provides:
 
-| Framework       | Database / ORM         | Integrations / Services |
-|----------------|------------------|--------------------------|
-| Next.js        |  Oracle Database  | Cloudinary (media)       |
-| Spring Boot (Java) |   JPA/Hibernate    | Spaceflight News API (news)         |
+- **Real-time Space News**: Stay updated with the latest discoveries and missions
+- **Interactive Quizzes**: Test your space knowledge with dynamic questions
+- **Competitive Rankings**: Compete with other space enthusiasts
+- **Admin Management**: Comprehensive content management system
+- **User Profiles**: Personal progress tracking and achievements
 
-## 📡 API Integration
+### 🎯 Value Proposition
 
-The app integrates with:
+SpaceForces bridges the gap between space education and entertainment, making space science accessible and engaging for enthusiasts of all levels.
 
-- **[Spaceflight News API](https://api.spaceflightnewsapi.net/v4/docs/)** – Fetches up-to-date news about space missions, rockets, and space agencies.
+## ✨ Features
 
----
+### 🧩 Quizzes
 
-## Key Features
+- **Real-time Competitions**: Regularly hosted space-themed quizzes
+- **Difficulty Levels**: Questions categorized by complexity
+- **Topic Specialization**: Focus on specific areas like Astronomy, Space Missions, Rockets, Black Holes, Astrobiology
+- **Admin Creation Tools**: Content management for quiz creation and review
+- **Time-limited Challenges**: Answer within set timeframes
 
-### 1. Quizzes
+### 🏆 Ranking System
 
-- Regularly hosted **space-themed quizzes**.
-- Users compete in real-time, answering questions within a set timeframe.
-- Problems categorized by difficulty.
-- Administrators can create and submit quizzes.
-- Review process to ensure quality and accuracy.
+- **Performance-based Rankings**: Users ranked by quiz performance
+- **Division Leaderboards**: Updated rankings per category
+- **Point System**: Difficulty-based scoring mechanism
+- **Achievement Tracking**: Progress monitoring and badges
 
-### 2. Ranking System
+### 📰 Space News Integration
 
-- Users ranked based on **quiz performance**.
-- Leaderboards updated per division.
-- Points assigned based on question difficulty.
+- **Live Updates**: Latest space discoveries and mission updates
+- **Curated Content**: Quality-filtered news from reliable sources
+- **Category Filtering**: Organize news by topics and agencies
 
-### 3. Topic-based Challenges
+## 🛠 Technologies Used
 
-- Quizzes categorized into **Astronomy, Space Missions, Rockets, Black Holes, Astrobiology, etc...**
-- Users can choose to specialize in specific topics.
+### Frontend
 
-### 4. Space news
+- **Framework**: Next.js 14.2.17
+- **Language**: TypeScript 5.8.2
+- **Styling**: Tailwind CSS 3.3.3
+- **UI Components**: Radix UI
+- **State Management**: Zustand 4.5.2
+- **Form Handling**: React Hook Form 7.53.0
+- **HTTP Client**: Axios 1.8.4
 
-- Keep users updated with the latest space discoveries and events.
+### Backend
 
-## Conception
+- **Framework**: Spring Boot 3.4.3
+- **Language**: Java 23
+- **Database**: Oracle Database
+- **ORM**: JPA/Hibernate
+- **Security**: Spring Security + JWT
+- **Build Tool**: Maven 3.9.9
 
-### Use case Diagram
+### Cloud & Services
 
-![Usecase diagram](https://img.plantuml.biz/plantuml/png/ZP9DQiCm48NtEiNWhfDL4qW99at0kq9fJp184rl47fcHt2nAxrvBScAdg-wizxvvyuCFFg24eMjLI-S0mO7OkWbWh90Erh7o5yiz2dOmUDBe2RuLm17rfHOti3cvrWayRJUlkwgAZXD3CgbLjTqTdzMFKgZ3A1HZXXI0FeR9JKJJMKvg-b8gzaQkMuBYiqTDPoUQV94wtwOeJWtf2_Ze0zFLfm0TnINrFgvdjUqn45W6xJYG3ndkP-yXM2ZI3wXEsfBwe2zBLq0sq25ZVIz8l2HtoRzbAEwT8tFL4i4XDCJZI1WldmyoIl5yiGnMgt9QyFvShZ0pUTXqp2HCqyp2r5ijoc6zBbCxU87zth9k1qDbgNBOFzpSv8z_83RZt_KB)
+- **Media Storage**: Cloudinary
+- **News API**: Spaceflight News API
+- **Monitoring**: Prometheus + Grafana
+- **Containerization**: Docker
+- **Orchestration**: Kubernetes
 
-### Entity Relationship Diagram
+## Architecture
 
-![Entity Relationship Diagram](https://www.plantuml.com/plantuml/png/fLHDRnGn3BtdL-J6QV_0gbfLWXk7bWhEaITnToto4H9FQOluxqocqoRDeh0Ifv76ptvFpo--pWo9PsU5jf2p_1WyO-PFT7zFUhRy97y9ANUIZDpBYOxaMLvTtNu-7DRVvWsdB4ne5z0397s2jA1yOEbdQpSiJ5F21mAcu2jE_1ORzPUPdiTiJ6nnHA4J0gDHqvEQCoRLpEdbzYKEaNIT_GB7h1F5Jd2fhAuf0unChaWgdypWuhaeCoVOHYnaUCI1SE1srYiLpxdZTy7Wtpt4NBZ6FlxOK8hnaKT-nh1qvYfywwRdrhxAVXClvpvRG8WNIQAiT4W9DPVs46oblmF__Mk9oF-ag0zgvpjvrPjoFi31unXLDN_BcCPoIv0zkA5YT41skCY5wsT8HfqWd_vXBnX7VZCNmL-OYhIOhrPh-ysMcGOjCfewjJfm2ub9KuGcE_NnTdxqyUjgMOU4dJ0TNBIuPgj_gqN41tc7TkNE9ufPh5TejpkyR6RVd9HQEZ-I--QqYBT7MB2bgMX56_mnImxY9jRYXdmFACobt0Hwt_WhtZlMQ8sl1SyLr2if_WbnZTwKg_y7)
+![architecture](https://mermaid.ink/img/pako:eNpVj8FygjAQhl8ls2dlAiJIDp0RrN5aZ_RU8LCFFWkhYWIyo3V890bFgzkl-33_bvYCpaoIBNQa-wPbpoVk7szzpVbSkKzYmH3QyXg_xx0bj99YmqdY_j7ApteNrFmqlNk9cundyfJPjWVLbL5dswUa_MYjvRjvedYqWzUS9XkAy3ytVUfmQHYYtcpXGvco8SW6hBF0pDtsKvftyw0V4FIdFSDctaI92tYUUMirU9EatTnLEoTRlkagla0Pz4ftKzS0aNBt34HYY3t01R7ll1LdU6r1bdKQdouTzpSVBkTg310QFziB8IPAC6Y8Cv0wTJI4utGzK0fci5OJH8ezME6mnE-uI_i7t-de5DsSzeJpMgkjzmfXf5FmeEU?type=png)
 
-## DevOps Infrastructure
+## Getting Started
+
+### Prerequisites
+- **Oracle ATP instance**
+- **Node.js** >= 18.2.0
+- **Java** >= 23
+- **Maven** >= 3.9.9
+- **Docker** & **Docker Compose**
+- **Oracle Database** (or use provided Docker setup)
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/your-username/spaceforces.git
+   cd spaceforces
+   ```
+
+2. **Backend Setup**
+
+   ```bash
+   cd spaceforces-back
+   
+   # Configure environment variables
+   cp .env.example .env
+   # Edit .env with your configuration
+   
+   # Install dependencies and run
+   mvn clean install
+   mvn spring-boot:run
+   ```
+
+3. **Frontend Setup**
+
+   ```bash
+   cd spaceforces-front
+   
+   # Install dependencies
+   npm install
+   
+   # Configure environment
+   cp .env.local.example .env.local
+   # Edit .env.local with your API URLs
+   
+   # Run development server
+   npm run dev
+   ```
+
+### Environment Variables
+
+#### Backend (.env)
+
+```env
+DB_URL=your_oracle_db_url
+DB_USERNAME=your_db_username
+DB_PASSWORD=your_db_password
+JWT_SECRET=your_jwt_secret
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_API_KEY=your_cloudinary_key
+CLOUDINARY_API_SECRET=your_cloudinary_secret
+```
+
+#### Frontend (.env.local)
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+NEXT_PUBLIC_APP_NAME=SpaceForces
+```
+
+## Test Environments
+
+#### Unit Testing Environment with Mockito
+
+- **Libraries Overview**
+  - Mockito for mocking dependencies
+  - JUnit 5 for test execution
+
+- **Key Features**
+  - Mock object creation and verification
+  - Exception testing
+
+- **Testing Approach**
+
+  ```mermaid
+  Component Under Test → Mocked Dependencies → Assertions
+  ```
+
+- **Common Patterns**
+  - Service layer testing with repository mocks
+  - Controller layer testing with service mocks
+
+- **Benefits**
+  - Isolated component testing
+  - Fast execution
+  - Controlled dependency behavior
+  - Predictable test scenarios
+
+#### Integration Testing Environment
+
+##### MockMvc for API Testing
+
+- **Libraries Overview**
+  - Spring's MockMvc for HTTP request simulation
+  - SpringBootTest for integration testing, as it loads the full application context to test how components work together.
+
+- **Key Features**
+  - Full Spring context loading
+  - HTTP request/response simulation
+  - Response validation
+
+- **Testing Approach**
+
+  ```
+  HTTP Request → MockMvc → Spring Context → Database → Response
+  ```
+
+- **Common Patterns**
+  - Request building and execution
+  - Response status verification
+  - JSON content validation
+- **Benefits**
+  - No need for running server
+  - Fast test execution
+  - Real Spring context
+  - Complete request/response cycle
+
+##### H2 Database for Testing
+
+- **Key Features**
+  - Isolated test database
+  - Schema compatibility with production
+  - Fast data operations
+  - Transaction rollback support
+
+- **Common Patterns**
+  - Test data setup and cleanup
+  - Rollback after test
+
+#### Test Configuration Integration
+
+##### Unit Test Setup
+
+```java
+@ExtendWith(MockitoExtension.class)
+class ServiceTest {
+    @Mock
+    private Repository repository;
+    
+    @InjectMocks
+    private Service service;
+}
+```
+
+##### Integration Test Setup
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class IntegrationTest {
+    @Autowired
+    private MockMvc mockMvc;
+    
+    @Autowired
+    private TestEntityManager entityManager;
+}
+```
+
+#### Environment-Specific Features
+
+##### Unit Testing
+
+- Fast execution
+- Isolated components
+
+##### Integration Testing
+
+- End-to-end flows
+- Real database operations
+
+## 🐳 DevOps & Deployment
 
 ### Kubernetes Infrastructure
 
@@ -71,13 +279,22 @@ The application runs on a Kubernetes cluster using Minikube for local developmen
 
 ### CI/CD Pipeline
 
-Our project uses Jenkins for continuous integration and deployment.
+Our Jenkins pipeline includes:
+
+1. **Source Code Checkout**
+2. **Backend Tests & Build**
+3. **Frontend Tests & Build**
+4. **Docker Image Creation**
+5. **Kubernetes Deployment**
+6. **Integration Tests**
 
 [![Jenkins Pipeline](https://mermaid.ink/img/pako:eNqVVWtz4jYU_SuqO9MPHZLlZR6edjuAw24WQgiPZBOT6Qj7GjTYEiPL2aWQ_15Zsoxpux_KB4-le849R7r3mqPlswAsxwoj9s3fYi7Qwl1RJH89by6y9ZTsISIUXtHV1UfU9-Yg0j1yDxTHxEejdA2cgoAE9TZAxasm9xV44DXQgFGBJZ0nDnKZvwNeQTtJ8kVUQXf4DWhOGSiKm-VHN_SNcEZjmRA9Yk7wOoIkx7kKd-MNtuDvWCqkQgB57EbFhp4rDfFYqqLBFtNNwdXPoUJ9OqoMOSJAQyI13jXiU4Y4JXvsQ8i4D8lVKO2ID7-e0Gevv7wdu38OZ_eTxc3ERb8jwVNj4N_ENfZ3Ge825_V7g9EPaBOGOETwhuWpfe37hL548x3Zo3VKouDyGJ_VMUbHvlQAGhjKH_kZbnVYL77oS6NBOcFIqT5nKmNvAYlAJtU3IrYXxRnlBk_ozhuzDaFIsLycaAYbkgh-yKFjJXVXFrpTW5NjPzuEETE-J2cX955G_IKmabIt3NzGeGNualIYmebphlllSvn0815JTvViepZ4uJQwZK3x25p_-KjOHkPM-AFFJCYikWBBYpC99lrOl5mYHXv0kBcHBYzCpYsH5WKmF7Ozi7m33AdYQHl8XNhH7BCfZ2hWqCy8KZPV6fmCMHrZBHOlsCyaILMijInlWfHRKK418Coo5NSp9SxwFkXZSCUCi9QILQsfT8fivi509PNRWXnSi6ez9FcjHebk_6H9dL6DstRXJZVvLdTi2cvbUbbnuVLPKvZyNB8x2axJGonc94vKPk99OahZVfSLV4CTbAMCCH56LROGmEQphxPKX86EUG78A50NXQlAKEm2EFzWUOtejmie-7_mNhGHCFBPJosi52eohXYI5YiEm1gntKFTjhktHfc70PK75biR1fEw9IOgXo6Pi0jYgGo5cm80G2E9DMqRhx9G5iZbA-zQXlGrYsXyw41JIP-SjhlyZYktxLCyHPkaQIhl9VbWir5LKE4Fmx-obznZp7RicZZutmaRqp5zCd5wHFtOiKNE7u4xfWEsNqANz5RytuxM4AOWUmE5rW5NgS3naH23nHqjet1pdxvtWq1a7bYbjWbFOlhOrd26btabtU612bJr7W7Nfq9Yf6n89etqs2k3q7VWq2M3O3an-f43IP5P6g?type=png)](https://mermaid.live/edit#pako:eNqVVWtz4jYU_SuqO9MPHZLlZR6edjuAw24WQgiPZBOT6Qj7GjTYEiPL2aWQ_15Zsoxpux_KB4-le849R7r3mqPlswAsxwoj9s3fYi7Qwl1RJH89by6y9ZTsISIUXtHV1UfU9-Yg0j1yDxTHxEejdA2cgoAE9TZAxasm9xV44DXQgFGBJZ0nDnKZvwNeQTtJ8kVUQXf4DWhOGSiKm-VHN_SNcEZjmRA9Yk7wOoIkx7kKd-MNtuDvWCqkQgB57EbFhp4rDfFYqqLBFtNNwdXPoUJ9OqoMOSJAQyI13jXiU4Y4JXvsQ8i4D8lVKO2ID7-e0Gevv7wdu38OZ_eTxc3ERb8jwVNj4N_ENfZ3Ge825_V7g9EPaBOGOETwhuWpfe37hL548x3Zo3VKouDyGJ_VMUbHvlQAGhjKH_kZbnVYL77oS6NBOcFIqT5nKmNvAYlAJtU3IrYXxRnlBk_ozhuzDaFIsLycaAYbkgh-yKFjJXVXFrpTW5NjPzuEETE-J2cX955G_IKmabIt3NzGeGNualIYmebphlllSvn0815JTvViepZ4uJQwZK3x25p_-KjOHkPM-AFFJCYikWBBYpC99lrOl5mYHXv0kBcHBYzCpYsH5WKmF7Ozi7m33AdYQHl8XNhH7BCfZ2hWqCy8KZPV6fmCMHrZBHOlsCyaILMijInlWfHRKK418Coo5NSp9SxwFkXZSCUCi9QILQsfT8fivi509PNRWXnSi6ez9FcjHebk_6H9dL6DstRXJZVvLdTi2cvbUbbnuVLPKvZyNB8x2axJGonc94vKPk99OahZVfSLV4CTbAMCCH56LROGmEQphxPKX86EUG78A50NXQlAKEm2EFzWUOtejmie-7_mNhGHCFBPJosi52eohXYI5YiEm1gntKFTjhktHfc70PK75biR1fEw9IOgXo6Pi0jYgGo5cm80G2E9DMqRhx9G5iZbA-zQXlGrYsXyw41JIP-SjhlyZYktxLCyHPkaQIhl9VbWir5LKE4Fmx-obznZp7RicZZutmaRqp5zCd5wHFtOiKNE7u4xfWEsNqANz5RytuxM4AOWUmE5rW5NgS3naH23nHqjet1pdxvtWq1a7bYbjWbFOlhOrd26btabtU612bJr7W7Nfq9Yf6n89etqs2k3q7VWq2M3O3an-f43IP5P6g)
 
----
+## Video Demo
 
-## Project Team
+[Watch demo video](readme-media/videoDemo.mp4)
+
+## Team
 
 - **Idriss El Abidi**
 - **Younes Lamnouar**
