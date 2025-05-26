@@ -1,0 +1,73 @@
+@startuml
+
+
+entity quiz {
+  *id : bigint <<PK>>
+  title : varchar <<not null>>
+  created_by_user_id : bigint
+  difficulty_id : bigint
+  topic : varchar
+  description : varchar
+  start_datetime : timestamp <<not null>>
+  duration : integer <<not null>>
+  created_at : timestamp
+  status : varchar
+  mode : varchar
+}
+
+entity contest_difficulty {
+  *id : bigint <<PK>>
+  difficulty_label : varchar <<not null>>
+  abbreviation : varchar
+}
+
+entity question {
+  *id : bigint <<PK>>
+  question_text : varchar <<not null>>
+  points : integer
+  quiz_id : bigint
+}
+
+entity option {
+  *id : bigint <<PK>>
+  question_id : bigint
+  option_text : varchar <<not null>>
+  is_correct : bool
+}
+
+entity rank_title {
+  *id : bigint <<PK>>
+  title : varchar <<not null>>
+  abbreviation : varchar
+  min_points : integer <<not null>>
+  max_points : integer <<not null>>
+}
+
+entity user_table {
+  *id : bigint <<PK>>
+  username : varchar <<not null>>
+  email : varchar <<not null>>
+  password_hash : varchar <<not null>>
+  is_admin : boolean <<not null>>
+  points : integer
+  rank_title_id : bigint
+  is_deleted : boolean
+}
+
+entity participation {
+  *user_id : bigint <<PK>>
+  *quiz_id : bigint <<PK>>
+  score : integer
+  completion_time : timestamp
+}
+
+' Relationships
+quiz::created_by_user_id --> user_table::id
+quiz::difficulty_id --> contest_difficulty::id
+question::quiz_id --> quiz::id
+option::question_id --> question::id
+user_table::rank_title_id --> rank_title::id
+participation::user_id --> user_table::id
+participation::quiz_id --> quiz::id
+
+@enduml
