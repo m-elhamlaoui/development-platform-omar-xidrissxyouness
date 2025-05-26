@@ -172,7 +172,7 @@ NEXT_PUBLIC_APP_NAME=SpaceForces
 
 - **Testing Approach**
 
-  ```mermaid
+  ```
   Component Under Test → Mocked Dependencies → Assertions
   ```
 
@@ -292,7 +292,7 @@ Our Jenkins pipeline includes:
 
 ## Video Demo
 
-[Watch demo video](readme-media/videoDemo.mp4)
+[Watch demo video](videoDemo.mp4)
 
 ## Team
 
