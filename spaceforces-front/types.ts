@@ -8,6 +8,14 @@ export interface User {
   description?: string;
 }
 
+export interface DecodedToken {
+  sub: string;
+  userId: number;
+  isAdmin: boolean;
+  iat: number;
+  exp: number;
+}
+
 export interface Rank {
   id: number;
   title: string;
@@ -88,6 +96,6 @@ export interface Submission {
 
 export enum QuizStatus {
   CREATED = "CREATED",
-  LIVE = "LIVE", 
-  FINISHED = "FINISHED"
+  LIVE = "LIVE",
+  FINISHED = "FINISHED",
 }

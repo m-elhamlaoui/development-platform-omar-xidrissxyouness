@@ -29,7 +29,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/login",
             "/register",
             "/verify",
-            "/quizzes",
             "/stats"
     );
 

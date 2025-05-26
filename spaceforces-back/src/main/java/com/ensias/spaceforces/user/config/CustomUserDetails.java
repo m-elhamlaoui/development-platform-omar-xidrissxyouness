@@ -18,11 +18,14 @@ public class CustomUserDetails implements UserDetails {
     private String email;
     @Getter
     private String password;
+    @Getter
+    private boolean isAdmin;
 
     public CustomUserDetails(User user) {
         this.id = user.getId();
         this.email = user.getEmail();
         this.password = user.getPassword();
+        this.isAdmin = user.isAdmin();
     }
 
     @Override

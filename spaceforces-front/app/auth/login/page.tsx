@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "@/services/login";
 import { useAuthStore } from "@/lib/store";
+import type { DecodedToken } from "@/types";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -43,12 +44,12 @@ export default function LoginPage() {
       .then((response) => {
         toast.success("Login successful! Redirecting to home page...");
         const decodedToken = jwt.decode(response.token);
-        document.cookie = `token=${response}; path=/; max-age=3600;`;
+        document.cookie = `token=${response.token}; path=/; max-age=3600;`;
+        //@ts-ignore
         setUser({
-          // @ts-ignore
-          id: decodedToken?.userId,
-          // @ts-ignore
-          email: decodedToken?.sub,
+          id: (decodedToken as DecodedToken)?.userId,
+          email: (decodedToken as DecodedToken)?.sub,
+          isAdmin: (decodedToken as DecodedToken)?.isAdmin,
         });
         router.push("/");
       })
@@ -65,7 +66,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8 bg-[#1a1a4f]/70 p-8 rounded-xl backdrop-blur-sm">
           <div className="text-center">
             <Rocket className="mx-auto h-12 w-12 text-purple-400" />
-            <h2 className="mt-6 text-3xl font-bold">Welcome to SpaceForces (update from jenkins v1.8)</h2>
+            <h2 className="mt-6 text-3xl font-bold">Welcome to SpaceForces</h2>
             <p className="mt-2 text-sm text-gray-400">Sign in to your account</p>
           </div>
 
